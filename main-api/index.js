@@ -1,5 +1,6 @@
 const app = require('./src/app');
 const Database = require('./src/utils/database');
+const rabbitMQManager = require('./src/utils/rabbitmqManager');
 
 const PORT = process.env.PORT || 3000;
 
@@ -12,6 +13,10 @@ async function startServer() {
     await Database.validateSchema();
     
     console.log('✅ Database connected and schema validated');
+
+    // Initialize RabbitMQ
+    await rabbitMQManager.initialize();
+    console.log('✅ RabbitMQ initialized');
 
     // Start server
     app.listen(PORT, () => {
@@ -30,12 +35,14 @@ async function startServer() {
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('🛑 SIGTERM received, shutting down gracefully');
+  await rabbitMQManager.close();
   await Database.close();
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
   console.log('🛑 SIGINT received, shutting down gracefully');
+  await rabbitMQManager.close();
   await Database.close();
   process.exit(0);
 });
