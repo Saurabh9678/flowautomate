@@ -1,4 +1,5 @@
 const moment = require('moment');
+const { NotFoundError } = require('../utils/CustomError');
 
 class BaseRepository {
   constructor(model) {
@@ -39,7 +40,7 @@ class BaseRepository {
   async update(id, data) {
     const instance = await this.model.findByPk(id);
     if (!instance) {
-      throw new Error(`${this.model.name} not found`);
+      throw new NotFoundError(`${this.model.name} not found`, this.model.name);
     }
     return await instance.update(data);
   }
@@ -48,7 +49,7 @@ class BaseRepository {
   async delete(id) {
     const instance = await this.model.findByPk(id);
     if (!instance) {
-      throw new Error(`${this.model.name} not found`);
+      throw new NotFoundError(`${this.model.name} not found`, this.model.name);
     }
     const utcTimestamp = moment.utc().toDate();
     return await instance.update({ deleted_at: utcTimestamp });
@@ -58,7 +59,7 @@ class BaseRepository {
   async hardDelete(id) {
     const instance = await this.model.findByPk(id);
     if (!instance) {
-      throw new Error(`${this.model.name} not found`);
+      throw new NotFoundError(`${this.model.name} not found`, this.model.name);
     }
     return await instance.destroy({ force: true });
   }
@@ -69,7 +70,7 @@ class BaseRepository {
       where: { id, deleted_at: { [this.model.sequelize.Op.ne]: null } }
     });
     if (!instance) {
-      throw new Error(`${this.model.name} not found or not deleted`);
+      throw new NotFoundError(`${this.model.name} not found or not deleted`, this.model.name);
     }
     return await instance.update({ deleted_at: null });
   }

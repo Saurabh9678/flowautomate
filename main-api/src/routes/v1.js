@@ -6,15 +6,12 @@ const { successResponse } = require('../utils/apiResponse');
 const router = express.Router();
 
 // API Version 1 Routes
-router.use('/users', userRoutes);
+router.use('/user', userRoutes);
 router.use('/pdf', pdfRoutes);
 
 // Health check endpoint
 router.get('/', (req, res) => {
-  successResponse(res, 200, {
-    message: 'FlowAutomate API v1 is running',
-    version: '1.0.0'
-  }, 'FlowAutomate API v1 is running', null);
+  successResponse(res, 200, null, 'FlowAutomate API v1 is running', null);
 });
 
 

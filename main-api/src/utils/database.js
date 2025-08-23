@@ -1,4 +1,5 @@
 const { sequelize } = require('../models');
+const { BadRequestError } = require('./CustomError');
 
 class Database {
   static async connect() {
@@ -59,7 +60,7 @@ class Database {
       if (validationErrors.length > 0) {
         console.error('🚨 Schema validation failed:');
         validationErrors.forEach(error => console.error(error));
-        throw new Error(`Database schema mismatch detected. Please update your database schema or models.\n${validationErrors.join('\n')}`);
+        throw new BadRequestError(`Database schema mismatch detected. Please update your database schema or models.\n${validationErrors.join('\n')}`);
       }
 
       console.log('✅ Database schema validation passed');

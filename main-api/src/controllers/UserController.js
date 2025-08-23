@@ -60,11 +60,9 @@ class UserController {
     
     const user = await this.userService.validateUser(username, password);
     
-    if (!user) {
-      throw new UnauthorizedError('Invalid credentials');
-    }
+    const token = generateToken(user.id);
     
-    successResponse(res, 200, user, 'User logged in successfully', null);
+    successResponse(res, 200, { user, token }, 'User logged in successfully', null);
   }
 }
 

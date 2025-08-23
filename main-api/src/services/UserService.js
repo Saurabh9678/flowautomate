@@ -1,5 +1,6 @@
 const UserRepository = require('../repositories/UserRepository');
 const bcrypt = require('bcryptjs');
+const { NotFoundError, UnauthorizedError } = require('../utils/CustomError');
 
 class UserService {
   constructor() {
@@ -23,7 +24,7 @@ class UserService {
   async getUserById(id) {
     const user = await this.userRepository.findById(id);
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundError('User not found', 'User');
     }
     
     const { password, ...userWithoutPassword } = user.toJSON();
@@ -56,12 +57,12 @@ class UserService {
   async validateUser(username, password) {
     const user = await this.userRepository.findByUsername(username);
     if (!user) {
-      throw new Error('Invalid credentials');
+      throw new UnauthorizedError('Invalid credentials');
     }
 
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
-      throw new Error('Invalid credentials');
+      throw new UnauthorizedError('Invalid credentials');
     }
 
     const { password: _, ...userWithoutPassword } = user.toJSON();
