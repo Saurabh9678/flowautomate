@@ -1,5 +1,6 @@
 const UserService = require('../services/UserService');
 const { successResponse } = require('../utils/apiResponse');
+const { generateToken } = require('../utils/jwt');
 const { 
   NotFoundError, 
   ValidationError, 
@@ -63,8 +64,10 @@ class UserController {
     if (!user) {
       throw new UnauthorizedError('Invalid credentials');
     }
+
+    const token = generateToken(user.id);
     
-    successResponse(res, 200, user, 'User logged in successfully', null);
+    successResponse(res, 200, { user, token }, 'User logged in successfully', null);
   }
 }
 
