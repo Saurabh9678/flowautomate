@@ -4,7 +4,7 @@ module.exports = (sequelize, DataTypes) => {
   class Pdf extends Model {
     static associate(models) {
       // Define associations here
-      Pdf.belongsTo(models.User, { foreignKey: 'userId', as: 'user' });
+      Pdf.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' });
     }
   }
 
@@ -14,19 +14,17 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       autoIncrement: true
     },
-    userId: {
+    user_id: {
       type: DataTypes.BIGINT,
       allowNull: false,
-      field: 'user_id',
       references: {
         model: 'users',
         key: 'id'
       }
     },
-    pdfPath: {
+    pdf_path: {
       type: DataTypes.TEXT,
-      allowNull: false,
-      field: 'pdf_path'
+      allowNull: false
     },
     status: {
       type: DataTypes.ENUM('queued', 'parsing', 'transform', 'ready', 'failed'),
@@ -36,14 +34,12 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.TEXT,
       allowNull: true
     },
-    createdAt: {
+    created_at: {
       type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-      field: 'created_at'
+      defaultValue: DataTypes.NOW
     },
-    deletedAt: {
-      type: DataTypes.DATE,
-      field: 'deleted_at'
+    deleted_at: {
+      type: DataTypes.DATE
     }
   }, {
     sequelize,
@@ -51,7 +47,7 @@ module.exports = (sequelize, DataTypes) => {
     tableName: 'pdfs',
     timestamps: true,
     underscored: true,
-    paranoid: true, // This enables soft deletes using deletedAt
+    paranoid: true, // This enables soft deletes using deleted_at
     createdAt: 'created_at',
     updatedAt: false, // No updated_at field in your schema
     deletedAt: 'deleted_at'

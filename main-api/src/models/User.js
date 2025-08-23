@@ -4,7 +4,7 @@ module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     static associate(models) {
       // Define associations here
-      User.hasMany(models.Pdf, { foreignKey: 'userId', as: 'pdfs' });
+      User.hasMany(models.Pdf, { foreignKey: 'user_id', as: 'pdfs' });
     }
   }
 
@@ -23,19 +23,16 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING(255),
       allowNull: false
     },
-    isActive: {
+    is_active: {
       type: DataTypes.BOOLEAN,
-      defaultValue: true,
-      field: 'is_active'
+      defaultValue: true
     },
-    createdAt: {
+    created_at: {
       type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-      field: 'created_at'
+      defaultValue: DataTypes.NOW
     },
-    deletedAt: {
-      type: DataTypes.DATE,
-      field: 'deleted_at'
+    deleted_at: {
+      type: DataTypes.DATE
     }
   }, {
     sequelize,
@@ -43,7 +40,7 @@ module.exports = (sequelize, DataTypes) => {
     tableName: 'users',
     timestamps: true,
     underscored: true,
-    paranoid: true, // This enables soft deletes using deletedAt
+    paranoid: true, // This enables soft deletes using deleted_at
     createdAt: 'created_at',
     updatedAt: false, // No updated_at field in your schema
     deletedAt: 'deleted_at'

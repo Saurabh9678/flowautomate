@@ -9,7 +9,7 @@ class PdfRepository extends BaseRepository {
 
   async findByUserId(userId) {
     return await this.findAll({
-      where: { userId }
+      where: { user_id: userId }
     });
   }
 
@@ -53,13 +53,13 @@ class PdfRepository extends BaseRepository {
   }
 
   async restorePdfByUserId(userId) {
-    const pdfs = await this.findDeleted({ where: { userId } });
+    const pdfs = await this.findDeleted({ where: { user_id: userId } });
     const restorePromises = pdfs.map(pdf => this.restore(pdf.id));
     return await Promise.all(restorePromises);
   }
 
   async findDeletedPdfsByUserId(userId) {
-    return await this.findDeleted({ where: { userId } });
+    return await this.findDeleted({ where: { user_id: userId } });
   }
 
   async findDeletedPdfsByStatus(status) {
@@ -71,7 +71,7 @@ class PdfRepository extends BaseRepository {
     const utcTimestamp = moment.utc(timestamp).toDate();
     return await this.findDeleted({
       where: {
-        deletedAt: {
+        deleted_at: {
           [this.model.sequelize.Op.gte]: utcTimestamp
         }
       }
@@ -82,7 +82,7 @@ class PdfRepository extends BaseRepository {
     const utcTimestamp = moment.utc(timestamp).toDate();
     return await this.findDeleted({
       where: {
-        deletedAt: {
+        deleted_at: {
           [this.model.sequelize.Op.lte]: utcTimestamp
         }
       }
@@ -94,43 +94,24 @@ class PdfRepository extends BaseRepository {
     const endUTC = moment.utc(endTimestamp).toDate();
     return await this.findDeleted({
       where: {
-        deletedAt: {
+        deleted_at: {
           [this.model.sequelize.Op.between]: [startUTC, endUTC]
         }
       }
     });
   }
 
-  // Get deletion statistics with UTC timestamps
   async getDeletionStats() {
-    const deletedPdfs = await this.findDeleted();
-    const stats = {
-      totalDeleted: deletedPdfs.length,
-      deletedToday: 0,
-      deletedThisWeek: 0,
-      deletedThisMonth: 0
+    const totalPdfs = await this.count();
+    const deletedPdfs = await this.countDeleted();
+    const activePdfs = totalPdfs - deletedPdfs;
+    
+    return {
+      total: totalPdfs,
+      active: activePdfs,
+      deleted: deletedPdfs,
+      deletionRate: totalPdfs > 0 ? (deletedPdfs / totalPdfs * 100).toFixed(2) + '%' : '0%'
     };
-
-    const now = moment.utc();
-    const startOfDay = moment.utc().startOf('day');
-    const startOfWeek = moment.utc().startOf('week');
-    const startOfMonth = moment.utc().startOf('month');
-
-    deletedPdfs.forEach(pdf => {
-      const deletedAt = moment.utc(pdf.deletedAt);
-      
-      if (deletedAt.isSameOrAfter(startOfDay)) {
-        stats.deletedToday++;
-      }
-      if (deletedAt.isSameOrAfter(startOfWeek)) {
-        stats.deletedThisWeek++;
-      }
-      if (deletedAt.isSameOrAfter(startOfMonth)) {
-        stats.deletedThisMonth++;
-      }
-    });
-
-    return stats;
   }
 }
 

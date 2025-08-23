@@ -17,18 +17,18 @@ class UserRepository extends BaseRepository {
 
   async findActiveUsers() {
     return await this.findAll({
-      where: { isActive: true }
+      where: { is_active: true }
     });
   }
 
   async findInactiveUsers() {
     return await this.findAll({
-      where: { isActive: false }
+      where: { is_active: false }
     });
   }
 
   async updateActiveStatus(id, isActive) {
-    return await this.update(id, { isActive });
+    return await this.update(id, { is_active: isActive });
   }
 
   // User-specific soft delete methods
@@ -67,11 +67,11 @@ class UserRepository extends BaseRepository {
   }
 
   async countActiveUsers() {
-    return await this.count({ isActive: true });
+    return await this.count({ is_active: true });
   }
 
   async countInactiveUsers() {
-    return await this.count({ isActive: false });
+    return await this.count({ is_active: false });
   }
 
   async countDeletedUsers() {
@@ -83,7 +83,7 @@ class UserRepository extends BaseRepository {
     const utcTimestamp = moment.utc(timestamp).toDate();
     return await this.findDeleted({
       where: {
-        deletedAt: {
+        deleted_at: {
           [this.model.sequelize.Op.gte]: utcTimestamp
         }
       }
@@ -94,7 +94,7 @@ class UserRepository extends BaseRepository {
     const utcTimestamp = moment.utc(timestamp).toDate();
     return await this.findDeleted({
       where: {
-        deletedAt: {
+        deleted_at: {
           [this.model.sequelize.Op.lte]: utcTimestamp
         }
       }
@@ -106,55 +106,24 @@ class UserRepository extends BaseRepository {
     const endUTC = moment.utc(endTimestamp).toDate();
     return await this.findDeleted({
       where: {
-        deletedAt: {
+        deleted_at: {
           [this.model.sequelize.Op.between]: [startUTC, endUTC]
         }
       }
     });
   }
 
-  // Get user deletion statistics with UTC timestamps
   async getUserDeletionStats() {
-    const deletedUsers = await this.findDeleted();
-    const stats = {
-      totalDeleted: deletedUsers.length,
-      deletedToday: 0,
-      deletedThisWeek: 0,
-      deletedThisMonth: 0
+    const totalUsers = await this.count();
+    const deletedUsers = await this.countDeleted();
+    const activeUsers = totalUsers - deletedUsers;
+    
+    return {
+      total: totalUsers,
+      active: activeUsers,
+      deleted: deletedUsers,
+      deletionRate: totalUsers > 0 ? (deletedUsers / totalUsers * 100).toFixed(2) + '%' : '0%'
     };
-
-    const startOfDay = moment.utc().startOf('day');
-    const startOfWeek = moment.utc().startOf('week');
-    const startOfMonth = moment.utc().startOf('month');
-
-    deletedUsers.forEach(user => {
-      const deletedAt = moment.utc(user.deletedAt);
-      
-      if (deletedAt.isSameOrAfter(startOfDay)) {
-        stats.deletedToday++;
-      }
-      if (deletedAt.isSameOrAfter(startOfWeek)) {
-        stats.deletedThisWeek++;
-      }
-      if (deletedAt.isSameOrAfter(startOfMonth)) {
-        stats.deletedThisMonth++;
-      }
-    });
-
-    return stats;
-  }
-
-  // Find users who have been inactive for a certain period
-  async findInactiveUsersSince(timestamp) {
-    const utcTimestamp = moment.utc(timestamp).toDate();
-    return await this.findAll({
-      where: {
-        isActive: false,
-        createdAt: {
-          [this.model.sequelize.Op.lte]: utcTimestamp
-        }
-      }
-    });
   }
 }
 

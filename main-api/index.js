@@ -8,10 +8,10 @@ async function startServer() {
     // Connect to database
     await Database.connect();
     
-    // Sync database schema with models
-    // Always use alter sync to safely apply schema changes
-    console.log('✅ Alter sync enabled - schema changes will be applied safely');
-    await Database.sync({ alter: true });
+    // Validate that database schema matches models
+    await Database.validateSchema();
+    
+    console.log('✅ Database connected and schema validated');
 
     // Start server
     app.listen(PORT, () => {

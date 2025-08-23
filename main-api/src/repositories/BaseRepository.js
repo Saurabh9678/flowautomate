@@ -6,8 +6,7 @@ class BaseRepository {
   }
 
   async findAll(options = {}) {
-    // Ensure we only get non-deleted records by default
-    const defaultWhere = { deletedAt: null };
+    const defaultWhere = { deleted_at: null };
     const finalOptions = {
       ...options,
       where: { ...defaultWhere, ...options.where }
@@ -16,22 +15,19 @@ class BaseRepository {
   }
 
   async findById(id, options = {}) {
-    // Ensure we only get non-deleted records by default
-    const defaultWhere = { deletedAt: null };
+    const defaultWhere = { deleted_at: null };
     const finalOptions = {
       ...options,
       where: { ...defaultWhere, ...options.where }
     };
-    return await this.model.findOne({ where: { id, ...defaultWhere }, ...finalOptions });
+    return await this.model.findByPk(id, finalOptions);
   }
 
-  async findOne(where, options = {}) {
-    // Ensure we only get non-deleted records by default
-    const defaultWhere = { deletedAt: null };
-    const finalWhere = { ...defaultWhere, ...where };
+  async findOne(options = {}) {
+    const defaultWhere = { deleted_at: null };
     const finalOptions = {
       ...options,
-      where: finalWhere
+      where: { ...defaultWhere, ...options.where }
     };
     return await this.model.findOne(finalOptions);
   }
@@ -41,41 +37,41 @@ class BaseRepository {
   }
 
   async update(id, data) {
-    const instance = await this.findById(id);
+    const instance = await this.model.findByPk(id);
     if (!instance) {
-      throw new Error('Record not found');
+      throw new Error(`${this.model.name} not found`);
     }
     return await instance.update(data);
   }
 
-  // Soft delete - sets deletedAt timestamp in UTC instead of removing record
+  // Soft delete - sets deleted_at timestamp in UTC instead of removing record
   async delete(id) {
-    const instance = await this.findById(id);
+    const instance = await this.model.findByPk(id);
     if (!instance) {
-      throw new Error('Record not found');
+      throw new Error(`${this.model.name} not found`);
     }
     const utcTimestamp = moment.utc().toDate();
-    return await instance.update({ deletedAt: utcTimestamp });
+    return await instance.update({ deleted_at: utcTimestamp });
   }
 
   // Hard delete - permanently removes the record
   async hardDelete(id) {
     const instance = await this.model.findByPk(id);
     if (!instance) {
-      throw new Error('Record not found');
+      throw new Error(`${this.model.name} not found`);
     }
     return await instance.destroy({ force: true });
   }
 
-  // Restore a soft-deleted record
+  // Restore soft deleted record
   async restore(id) {
-    const instance = await this.model.findOne({ 
-      where: { id, deletedAt: { [this.model.sequelize.Op.ne]: null } }
+    const instance = await this.model.findOne({
+      where: { id, deleted_at: { [this.model.sequelize.Op.ne]: null } }
     });
     if (!instance) {
-      throw new Error('Record not found or not deleted');
+      throw new Error(`${this.model.name} not found or not deleted`);
     }
-    return await instance.update({ deletedAt: null });
+    return await instance.update({ deleted_at: null });
   }
 
   // Find all records including deleted ones
@@ -90,7 +86,7 @@ class BaseRepository {
 
   // Find only deleted records
   async findDeleted(options = {}) {
-    const defaultWhere = { deletedAt: { [this.model.sequelize.Op.ne]: null } };
+    const defaultWhere = { deleted_at: { [this.model.sequelize.Op.ne]: null } };
     const finalOptions = {
       ...options,
       where: { ...defaultWhere, ...options.where }
@@ -98,31 +94,35 @@ class BaseRepository {
     return await this.model.findAll(finalOptions);
   }
 
-  async count(where = {}) {
-    // Ensure we only count non-deleted records by default
-    const defaultWhere = { deletedAt: null };
-    const finalWhere = { ...defaultWhere, ...where };
-    return await this.model.count({ where: finalWhere });
+  // Count all records (excluding deleted)
+  async count(options = {}) {
+    const defaultWhere = { deleted_at: null };
+    const finalOptions = {
+      ...options,
+      where: { ...defaultWhere, ...options.where }
+    };
+    return await this.model.count(finalOptions);
   }
 
-  // Count deleted records
-  async countDeleted(where = {}) {
-    const defaultWhere = { deletedAt: { [this.model.sequelize.Op.ne]: null } };
-    const finalWhere = { ...defaultWhere, ...where };
-    return await this.model.count({ where: finalWhere });
+  // Count only deleted records
+  async countDeleted(options = {}) {
+    const defaultWhere = { deleted_at: { [this.model.sequelize.Op.ne]: null } };
+    const finalOptions = {
+      ...options,
+      where: { ...defaultWhere, ...options.where }
+    };
+    return await this.model.count(finalOptions);
   }
 
-  // Utility method to get current UTC timestamp
+  // Utility methods for UTC timestamps
   getCurrentUTCTimestamp() {
     return moment.utc().toDate();
   }
 
-  // Utility method to format UTC timestamp
   formatUTCTimestamp(timestamp, format = 'YYYY-MM-DD HH:mm:ss UTC') {
     return moment.utc(timestamp).format(format);
   }
 
-  // Utility method to check if a timestamp is in UTC
   isUTCTimestamp(timestamp) {
     return moment.utc(timestamp).isValid();
   }
