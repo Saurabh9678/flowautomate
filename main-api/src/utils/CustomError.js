@@ -57,6 +57,12 @@ class BadRequestError extends CustomError {
   }
 }
 
+class TooManyRequestsError extends CustomError {
+  constructor(message = 'Too Many Requests') {
+    super(message, 429, 'TOO_MANY_REQUESTS');
+  }
+}
+
 module.exports = {
   CustomError,
   ValidationError,
@@ -64,5 +70,6 @@ module.exports = {
   UnauthorizedError,
   ForbiddenError,
   ConflictError,
-  BadRequestError
+  BadRequestError,
+  TooManyRequestsError
 };

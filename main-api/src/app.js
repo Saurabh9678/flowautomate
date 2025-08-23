@@ -2,11 +2,13 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const { generalLimiter} = require('./middleware/rateLimiter');
 require('dotenv').config();
 
-const userRoutes = require('./routes/userRoutes');
-const pdfRoutes = require('./routes/pdfRoutes');
+const v1Routes = require('./routes/v1');
 const errorHandler = require('./middleware/errorHandler');
+const { successResponse } = require('./utils/apiResponse');
+const { NotFoundError } = require('./utils/CustomError');
 
 const app = express();
 
@@ -20,25 +22,28 @@ app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
-app.use('/api/users', userRoutes);
-app.use('/api/pdfs', pdfRoutes);
+// Apply general rate limiting to all routes
+app.use(generalLimiter);
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Server is running',
-    timestamp: new Date().toISOString()
-  });
+// API Version 1 Routes
+app.use('/v1', v1Routes);
+
+
+// Root endpoint
+app.get('/', (req, res) => {
+  successResponse(res, 200, {
+    message: 'FlowAutomate API',
+    version: '1.0.0',
+    endpoints: {
+      v1: '/v1',
+      health: '/v1'
+    }
+  }, 'FlowAutomate API', null);
 });
 
 // 404 handler
 app.use('*', (req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route not found'
-  });
+  throw new NotFoundError('Route not found', 'Route');
 });
 
 // Error handling middleware
