@@ -1,9 +1,7 @@
 const UserService = require('../services/UserService');
 const { successResponse } = require('../utils/apiResponse');
-const { generateToken } = require('../utils/jwt');
 const { 
   NotFoundError, 
-  ValidationError, 
   UnauthorizedError 
 } = require('../utils/CustomError');
 
@@ -13,11 +11,13 @@ class UserController {
   }
 
   async createUser(req, res) {
+    // Joi validation has already validated and sanitized req.body
     const user = await this.userService.createUser(req.body);
     successResponse(res, 201, user, 'User created successfully', null);
   }
 
   async getUserById(req, res) {
+    // Joi validation has already validated req.params.id
     const user = await this.userService.getUserById(req.params.id);
     
     if (!user) {
@@ -28,6 +28,7 @@ class UserController {
   }
 
   async updateUser(req, res) {
+    // Joi validation has already validated req.params.id
     const user = await this.userService.updateUser(req.params.id, req.body);
     
     if (!user) {
@@ -38,6 +39,7 @@ class UserController {
   }
 
   async deleteUser(req, res) {
+    // Joi validation has already validated req.params.id
     const deleted = await this.userService.deleteUser(req.params.id);
     
     if (!deleted) {
@@ -53,21 +55,16 @@ class UserController {
   }
 
   async login(req, res) {
+    // Joi validation has already validated req.body
     const { username, password } = req.body;
-    
-    if (!username || !password) {
-      throw new ValidationError('Username and password are required');
-    }
     
     const user = await this.userService.validateUser(username, password);
     
     if (!user) {
       throw new UnauthorizedError('Invalid credentials');
     }
-
-    const token = generateToken(user.id);
     
-    successResponse(res, 200, { user, token }, 'User logged in successfully', null);
+    successResponse(res, 200, user, 'User logged in successfully', null);
   }
 }
 
