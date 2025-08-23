@@ -1,5 +1,6 @@
 const PdfService = require('../services/PdfService');
-const { successResponse, errorResponse } = require('../utils/apiResponse');
+const { successResponse } = require('../utils/apiResponse');
+const { NotFoundError } = require('../utils/CustomError');
 
 class PdfController {
   constructor() {
@@ -7,9 +8,24 @@ class PdfController {
   }
 
   async createPdf(req, res) {
-    const { userId, pdfPath } = req.body;
-    const pdf = await this.pdfService.createPdf(userId, pdfPath);
-    successResponse(res, 201, pdf, 'PDF created successfully', null);
+    // Get user ID from authenticated user
+    const userId = req.user.userId;
+    
+    if (!userId) {
+      throw new NotFoundError('User ID not found', 'User');
+    }
+
+    // Get file information from upload middleware
+    const uploadedFile = req.uploadedFile;
+    
+    if (!uploadedFile) {
+      throw new NotFoundError('No file uploaded', 'File');
+    }
+
+    // Create PDF record with file path
+    await this.pdfService.createPdf(userId, uploadedFile.filename);
+    
+    successResponse(res, 201, null, 'PDF uploaded and created successfully', null);
   }
 
   async getPdfById(req, res) {
