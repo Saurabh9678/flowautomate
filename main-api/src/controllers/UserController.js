@@ -1,9 +1,6 @@
 const UserService = require('../services/UserService');
 const { successResponse } = require('../utils/apiResponse');
-const { 
-  NotFoundError, 
-  UnauthorizedError 
-} = require('../utils/CustomError');
+const { generateToken } = require('../utils/jwt');
 
 class UserController {
   constructor() {
@@ -18,33 +15,27 @@ class UserController {
 
   async getUserById(req, res) {
     // Joi validation has already validated req.params.id
-    const user = await this.userService.getUserById(req.params.id);
-    
-    if (!user) {
-      throw new NotFoundError('User not found', 'User');
-    }
-    
-    successResponse(res, 200, user, 'User fetched successfully', null);
+    const userId = req.user.userId
+    const user = await this.userService.getUserById(userId);
+
+    // TRANSFORMED USER DATA
+    const transformedUser = {
+      username: user.username,
+    };
+    successResponse(res, 200, transformedUser, 'User fetched successfully', null);
   }
 
   async updateUser(req, res) {
     // Joi validation has already validated req.params.id
     const user = await this.userService.updateUser(req.params.id, req.body);
     
-    if (!user) {
-      throw new NotFoundError('User not found', 'User');
-    }
     
     successResponse(res, 200, user, 'User updated successfully', null);
   }
 
   async deleteUser(req, res) {
     // Joi validation has already validated req.params.id
-    const deleted = await this.userService.deleteUser(req.params.id);
-    
-    if (!deleted) {
-      throw new NotFoundError('User not found', 'User');
-    }
+    await this.userService.deleteUser(req.params.id);
     
     successResponse(res, 200, null, 'User deleted successfully', null);
   }

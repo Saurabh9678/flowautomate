@@ -63,6 +63,12 @@ class TooManyRequestsError extends CustomError {
   }
 }
 
+class InternalServerError extends CustomError {
+  constructor(message = 'Internal Server Error') {
+    super(message, 500, 'INTERNAL_SERVER_ERROR');
+  }
+}
+
 module.exports = {
   CustomError,
   ValidationError,
@@ -71,5 +77,6 @@ module.exports = {
   ForbiddenError,
   ConflictError,
   BadRequestError,
-  TooManyRequestsError
+  TooManyRequestsError,
+  InternalServerError
 };

@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { UnauthorizedError, BadRequestError } = require('../utils/CustomError');
+const { UnauthorizedError, InternalServerError } = require('../utils/CustomError');
 
 /**
  * Authenticate JWT token middleware
@@ -11,24 +11,24 @@ exports.authenticateToken = (req, res, next) => {
     const authHeader = req.headers.authorization;
     
     if (!authHeader) {
-      throw new UnauthorizedError('Authorization header is required');
+      throw new UnauthorizedError('Access denied');
     }
 
     // Check if the header starts with 'Bearer '
     if (!authHeader.startsWith('Bearer ')) {
-      throw new UnauthorizedError('Authorization header must start with Bearer');
+      throw new UnauthorizedError('Invalid token');
     }
 
     // Extract the token (remove 'Bearer ' prefix)
     const token = authHeader.substring(7);
 
     if (!token) {
-      throw new UnauthorizedError('Token is required');
+      throw new UnauthorizedError('Access denied');
     }
 
     // Check if JWT_SECRET is configured
     if (!process.env.JWT_SECRET) {
-      throw new BadRequestError('JWT_SECRET is not configured in environment variables');
+      throw new InternalServerError();
     }
 
     // Verify the token
