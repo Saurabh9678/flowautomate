@@ -1,4 +1,5 @@
 const PdfService = require('../services/PdfService');
+const { successResponse, errorResponse } = require('../utils/apiResponse');
 
 class PdfController {
   constructor() {
@@ -6,140 +7,50 @@ class PdfController {
   }
 
   async createPdf(req, res) {
-    try {
-      const { userId, pdfPath } = req.body;
-      const pdf = await this.pdfService.createPdf(userId, pdfPath);
-      res.status(201).json({
-        success: true,
-        data: pdf
-      });
-    } catch (error) {
-      res.status(400).json({
-        success: false,
-        message: error.message
-      });
-    }
+    const { userId, pdfPath } = req.body;
+    const pdf = await this.pdfService.createPdf(userId, pdfPath);
+    successResponse(res, 201, pdf, 'PDF created successfully', null);
   }
 
   async getPdfById(req, res) {
-    try {
-      const pdf = await this.pdfService.getPdfById(req.params.id);
-      res.status(200).json({
-        success: true,
-        data: pdf
-      });
-    } catch (error) {
-      res.status(404).json({
-        success: false,
-        message: error.message
-      });
-    }
+    const pdf = await this.pdfService.getPdfById(req.params.id);
+    successResponse(res, 200, pdf, 'PDF fetched successfully', null);
   }
 
   async getPdfsByUserId(req, res) {
-    try {
-      const pdfs = await this.pdfService.getPdfsByUserId(req.params.userId);
-      res.status(200).json({
-        success: true,
-        data: pdfs
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: error.message
-      });
-    }
+    const pdfs = await this.pdfService.getPdfsByUserId(req.params.userId);
+    successResponse(res, 200, pdfs, 'PDFs fetched successfully', null);
   }
 
   async updatePdfStatus(req, res) {
-    try {
-      const { status, error } = req.body;
-      const pdf = await this.pdfService.updatePdfStatus(req.params.id, status, error);
-      res.status(200).json({
-        success: true,
-        data: pdf
-      });
-    } catch (error) {
-      res.status(400).json({
-        success: false,
-        message: error.message
-      });
-    }
+    const { status, error } = req.body;
+    const pdf = await this.pdfService.updatePdfStatus(req.params.id, status, error);
+    successResponse(res, 200, pdf, 'PDF status updated successfully', null);
   }
 
   async deletePdf(req, res) {
-    try {
-      await this.pdfService.deletePdf(req.params.id);
-      res.status(200).json({
-        success: true,
-        message: 'PDF deleted successfully'
-      });
-    } catch (error) {
-      res.status(400).json({
-        success: false,
-        message: error.message
-      });
-    }
+    await this.pdfService.deletePdf(req.params.id);
+    successResponse(res, 200, null, 'PDF deleted successfully', null);
   }
 
   async getQueuedPdfs(req, res) {
-    try {
-      const pdfs = await this.pdfService.getQueuedPdfs();
-      res.status(200).json({
-        success: true,
-        data: pdfs
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: error.message
-      });
-    }
+    const pdfs = await this.pdfService.getQueuedPdfs();
+    successResponse(res, 200, pdfs, 'Queued PDFs fetched successfully', null);
   }
 
   async getReadyPdfs(req, res) {
-    try {
-      const pdfs = await this.pdfService.getReadyPdfs();
-      res.status(200).json({
-        success: true,
-        data: pdfs
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: error.message
-      });
-    }
+    const pdfs = await this.pdfService.getReadyPdfs();
+    successResponse(res, 200, pdfs, 'Ready PDFs fetched successfully', null);
   }
 
   async getFailedPdfs(req, res) {
-    try {
-      const pdfs = await this.pdfService.getFailedPdfs();
-      res.status(200).json({
-        success: true,
-        data: pdfs
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: error.message
-      });
-    }
+    const pdfs = await this.pdfService.getFailedPdfs();
+    successResponse(res, 200, pdfs, 'Failed PDFs fetched successfully', null);
   }
 
   async getAllPdfs(req, res) {
-    try {
-      const pdfs = await this.pdfService.getAllPdfs();
-      res.status(200).json({
-        success: true,
-        data: pdfs
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: error.message
-      });
-    }
+    const pdfs = await this.pdfService.getAllPdfs();
+    successResponse(res, 200, pdfs, 'All PDFs fetched successfully', null);
   }
 }
 

@@ -1,4 +1,10 @@
 const UserService = require('../services/UserService');
+const { successResponse } = require('../utils/apiResponse');
+const { 
+  NotFoundError, 
+  ValidationError, 
+  UnauthorizedError 
+} = require('../utils/CustomError');
 
 class UserController {
   constructor() {
@@ -6,94 +12,59 @@ class UserController {
   }
 
   async createUser(req, res) {
-    try {
-      const user = await this.userService.createUser(req.body);
-      res.status(201).json({
-        success: true,
-        data: user
-      });
-    } catch (error) {
-      res.status(400).json({
-        success: false,
-        message: error.message
-      });
-    }
+    const user = await this.userService.createUser(req.body);
+    successResponse(res, 201, user, 'User created successfully', null);
   }
 
   async getUserById(req, res) {
-    try {
-      const user = await this.userService.getUserById(req.params.id);
-      res.status(200).json({
-        success: true,
-        data: user
-      });
-    } catch (error) {
-      res.status(404).json({
-        success: false,
-        message: error.message
-      });
+    const user = await this.userService.getUserById(req.params.id);
+    
+    if (!user) {
+      throw new NotFoundError('User not found', 'User');
     }
+    
+    successResponse(res, 200, user, 'User fetched successfully', null);
   }
 
   async updateUser(req, res) {
-    try {
-      const user = await this.userService.updateUser(req.params.id, req.body);
-      res.status(200).json({
-        success: true,
-        data: user
-      });
-    } catch (error) {
-      res.status(400).json({
-        success: false,
-        message: error.message
-      });
+    const user = await this.userService.updateUser(req.params.id, req.body);
+    
+    if (!user) {
+      throw new NotFoundError('User not found', 'User');
     }
+    
+    successResponse(res, 200, user, 'User updated successfully', null);
   }
 
   async deleteUser(req, res) {
-    try {
-      await this.userService.deleteUser(req.params.id);
-      res.status(200).json({
-        success: true,
-        message: 'User deleted successfully'
-      });
-    } catch (error) {
-      res.status(400).json({
-        success: false,
-        message: error.message
-      });
+    const deleted = await this.userService.deleteUser(req.params.id);
+    
+    if (!deleted) {
+      throw new NotFoundError('User not found', 'User');
     }
+    
+    successResponse(res, 200, null, 'User deleted successfully', null);
   }
 
   async getAllUsers(req, res) {
-    try {
-      const users = await this.userService.getAllUsers();
-      res.status(200).json({
-        success: true,
-        data: users
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: error.message
-      });
-    }
+    const users = await this.userService.getAllUsers();
+    successResponse(res, 200, users, 'Users fetched successfully', null);
   }
 
   async login(req, res) {
-    try {
-      const { username, password } = req.body;
-      const user = await this.userService.validateUser(username, password);
-      res.status(200).json({
-        success: true,
-        data: user
-      });
-    } catch (error) {
-      res.status(401).json({
-        success: false,
-        message: error.message
-      });
+    const { username, password } = req.body;
+    
+    if (!username || !password) {
+      throw new ValidationError('Username and password are required');
     }
+    
+    const user = await this.userService.validateUser(username, password);
+    
+    if (!user) {
+      throw new UnauthorizedError('Invalid credentials');
+    }
+    
+    successResponse(res, 200, user, 'User logged in successfully', null);
   }
 }
 
