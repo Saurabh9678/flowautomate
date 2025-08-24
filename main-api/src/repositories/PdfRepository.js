@@ -39,6 +39,15 @@ class PdfRepository extends BaseRepository {
     return await this.update(id, updateData);
   }
 
+  async findByFilename(filename, userId) {
+    return await this.findOne({
+      where: {
+        filename,
+        user_id: userId
+      }
+    });
+  }
+
 }
 
 module.exports = PdfRepository;

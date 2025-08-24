@@ -40,6 +40,10 @@ class PdfService {
   async updatePdfStatus(id, status, error = null) {
     return await this.pdfRepository.updateStatus(id, status, error);
   }
+
+  async getPdfIdByFilename(filename, userId) {
+    return await this.pdfRepository.findByFilename(filename, userId);
+  }
 }
 
 module.exports = PdfService;

@@ -124,44 +124,14 @@ class ElasticsearchService {
    * @param {string} userId - User identifier (optional, for filtering)
    * @param {Object} options - Search options
    */
-  async searchPdfContent(query, userId = null, options = {}) {
+  async searchPdfContent(query) {
     try {
       if (!this.isConnected) {
         throw new Error('Elasticsearch not connected');
       }
 
-      const searchBody = {
-        query: {
-          bool: {
-            must: [
-              {
-                multi_match: {
-                  query: query,
-                  fields: ['title^2', 'text'], // title has higher weight
-                  type: 'best_fields',
-                  fuzziness: 'AUTO'
-                }
-              }
-            ]
-          }
-        },
-        highlight: {
-          fields: {
-            title: {},
-            text: {}
-          }
-        },
-        size: options.size || 10,
-        from: options.from || 0
-      };
-
-      // Add user filter if provided
-      if (userId) {
-        searchBody.query.bool.filter = [
-          { term: { user_id: userId } }
-        ];
-      }
-
+      const searchBody = query;
+      
       const result = await this.client.search({
         index: this.indexName,
         body: searchBody

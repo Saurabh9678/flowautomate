@@ -13,6 +13,12 @@ class RabbitMQConsumerService {
     this.isConnected = false;
     this.consumerTag = null;
     this.pdfService = new PdfService();
+    this.consumeRetry = 0;
+    this.maxConsumeRetries = 3;
+    this.consumeRetryDelay = 5000;
+    this.esStatusCheckRetries = 0;
+    this.maxEsStatusCheckRetries = 10;
+    this.esStatusCheckDelay = 5000;
   }
 
   /**
@@ -38,6 +44,19 @@ class RabbitMQConsumerService {
       
       // Setup binding
       await this.setupBinding();
+
+      // check if elasticsearch is ready
+      const esStatus = await elasticsearchManager.getStatus();
+      while (!esStatus.isInitialized && this.esStatusCheckRetries < this.maxEsStatusCheckRetries) {
+        console.log('Elasticsearch is not initialized, waiting for 5 seconds');
+        await new Promise(resolve => setTimeout(resolve, this.esStatusCheckDelay));
+        esStatus = await elasticsearchManager.getStatus();
+        this.esStatusCheckRetries++;
+      }
+
+      if (!esStatus.isInitialized) {
+        throw new Error('Elasticsearch is not initialized');
+      }
       
       // Start consuming messages
       await this.startConsuming();
@@ -169,6 +188,23 @@ class RabbitMQConsumerService {
       // Reject the message and requeue it
       this.channel.nack(msg, false, true);
       console.log('Message rejected and requeued');
+
+      // Increment retry count
+      this.consumeRetry++;
+
+      // Check if we've reached the maximum number of retries
+      if (this.consumeRetry >= this.maxConsumeRetries) {
+        console.error('Max retries reached for message processing');
+        // Reject the message to prevent infinite retries
+        this.channel.nack(msg, false, false);
+        console.log('Message rejected and not requeued');
+      } else {
+        // Wait for retry delay before retrying
+        setTimeout(() => {
+          console.log(`Retrying message processing (attempt ${this.consumeRetry + 1}/${this.maxConsumeRetries})...`);
+          this.handleMessage(msg);
+        }, this.consumeRetryDelay);
+      }
     }
   }
 
@@ -199,7 +235,7 @@ class RabbitMQConsumerService {
 
       // Step 3: Ingest into Elasticsearch
       console.log(`Ingesting documents into Elasticsearch for PDF ID: ${pdfId}`);
-      const indexResult = await elasticsearchManager.indexDocuments(documents, pdfId);
+      const indexResult = await elasticsearchManager.indexPDFDocuments(documents, pdfId);
       
       if (indexResult.success) {
         console.log(`Elasticsearch ingestion completed, ${indexResult.indexedCount} documents indexed`);
