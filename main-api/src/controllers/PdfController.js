@@ -1,6 +1,9 @@
 const PdfService = require('../services/PdfService');
 const { successResponse } = require('../utils/apiResponse');
 const { NotFoundError } = require('../utils/CustomError');
+const { parseAndSavePDF } = require('../utils/pdfParser');
+const rabbitMQManager = require('../utils/rabbitmqManager');
+const path = require('path');
 
 class PdfController {
   constructor() {
@@ -23,9 +26,65 @@ class PdfController {
     }
 
     // Create PDF record with file path
-    await this.pdfService.createPdf(userId, uploadedFile.filename);
+    const pdf = await this.pdfService.createPdf(userId, uploadedFile.filename);
     
-    successResponse(res, 201, null, 'PDF uploaded and created successfully', null);
+    // Send success response to client immediately
+    successResponse(res, 201, {
+      ...pdf,
+      fileInfo: {
+        originalName: uploadedFile.originalName,
+        filename: uploadedFile.filename,
+        size: uploadedFile.size,
+        mimetype: uploadedFile.mimetype
+      }
+    }, 'PDF uploaded and created successfully', null);
+
+    // Start PDF parsing process asynchronously (after response is sent)
+    this.processPdfAsync(pdf.id, uploadedFile.path, userId);
+  }
+
+  /**
+   * Process PDF asynchronously after response is sent
+   */
+  async processPdfAsync(pdfId, pdfFilePath, userId) {
+    try {
+      console.log(`🔄 Starting async PDF processing for PDF ID: ${pdfId}`);
+
+      // Update PDF status to 'parsing'
+      await this.pdfService.updatePdfStatus(pdfId, 'parsing');
+
+      // Get the directory where the PDF is stored
+      const pdfDir = path.dirname(pdfFilePath);
+      
+      // Parse PDF and save JSON results
+      const parsingResult = await parseAndSavePDF(pdfFilePath, pdfDir, `pdf_${pdfId}`);
+
+      // Calculate JSON path dynamically (same directory as PDF)
+      const pdfFileName = path.basename(pdfFilePath, '.pdf');
+      const jsonPath = path.join(pdfDir, `${pdfFileName}.json`);
+
+      // Send message to RabbitMQ queue
+      await rabbitMQManager.sendPdfParsedMessage({
+        pdfId: pdfId,
+        userId: userId,
+        filename: path.basename(pdfFilePath),
+        jsonPath: jsonPath,
+        pageCount: parsingResult.pageCount,
+        textLength: parsingResult.textLength,
+        tableCount: parsingResult.tableCount,
+        parsedAt: new Date().toISOString()
+      });
+
+      console.log(`✅ PDF processing completed successfully for PDF ID: ${pdfId}`);
+      console.log(`📤 Message sent to RabbitMQ queue for PDF ID: ${pdfId}`);
+      console.log(`📁 JSON file saved at: ${jsonPath}`);
+
+    } catch (error) {
+      console.error(`❌ PDF processing failed for PDF ID: ${pdfId}:`, error.message);
+      
+      // Update PDF status to 'failed' with error message
+      await this.pdfService.updatePdfStatus(pdfId, 'failed', error.message);
+    }
   }
 
   async getPdfById(req, res) {
