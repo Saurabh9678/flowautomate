@@ -77,8 +77,6 @@ class PdfController {
         console.log(`Database status updated to 'failed' for PDF ID: ${pdfId} (direct update)`);
       }
 
-      console.log(`PDF processing failed for PDF ID: ${pdfId}`);
-
     } catch (error) {
       console.error(`PDF processing failed for PDF ID: ${pdfId}:`, error.message);
       

@@ -58,7 +58,6 @@ class SearchController {
         sort: this.buildSortOptions(sort_by, sort_order),
       };
 
-      console.log(searchOptions.query);
 
       // Execute search using advanced search for better control
       const searchResult = await elasticsearchManager.searchPdfContent(
@@ -111,7 +110,7 @@ class SearchController {
     if (pdf_filename) {
       const pdfId = await this.getPdfIdByFilename(pdf_filename, userId);
       if (pdfId) {
-        finalQuery.bool.must.push({ term: { pdf_id: pdfId } });
+        finalQuery.bool.must.push({ terms: { pdf_id: pdfId } });
       }
     }
 
@@ -152,7 +151,6 @@ class SearchController {
         });
       }
     }
-
     return finalQuery;
   }
 
@@ -172,8 +170,8 @@ class SearchController {
         cleanFilename,
         userId
       );
-
-      return pdf ? pdf.id : null;
+      const pdfIds = pdf.map((pdf) => pdf.id);
+      return pdfIds;
     } catch (error) {
       console.error("Error getting PDF ID by filename:", error.message);
       return null;

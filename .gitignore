@@ -121,10 +121,6 @@ local/
 .dockerignore
 docker-compose.override.yml
 
-# Test and sample files
-dummy.pdf
-dummy-image.png
-extracted_data.json
 
 # Data files (but keep important config files)
 *.json

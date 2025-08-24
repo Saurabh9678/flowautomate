@@ -1,6 +1,6 @@
 const BaseRepository = require('./BaseRepository');
 const { Pdf } = require('../models');
-const moment = require('moment');
+const { Op } = require('sequelize');
 
 class PdfRepository extends BaseRepository {
   constructor() {
@@ -40,9 +40,11 @@ class PdfRepository extends BaseRepository {
   }
 
   async findByFilename(filename, userId) {
-    return await this.findOne({
+    return await this.findAll({
       where: {
-        filename,
+        pdf_path: {
+          [Op.like]: `%${filename}%`
+        },
         user_id: userId
       }
     });
