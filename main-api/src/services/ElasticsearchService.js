@@ -441,6 +441,65 @@ class ElasticsearchService {
   }
 
   /**
+   * Advanced search with complex queries and aggregations
+   * @param {Object} query - Elasticsearch query object
+   * @param {Object} aggregations - Aggregation requests
+   * @param {Object} options - Search options
+   * @returns {Object} Search results with aggregations
+   */
+  async advancedSearch(query, aggregations = {}, options = {}) {
+    if (!this.isConnected) {
+      throw new Error('Elasticsearch not connected');
+    }
+
+    const {
+      size = 20,
+      from = 0,
+      sort = { _score: { order: 'desc' } }
+    } = options;
+
+    try {
+      const searchBody = {
+        query,
+        size,
+        from,
+        sort,
+        highlight: {
+          fields: {
+            text: {},
+            title: {}
+          }
+        }
+      };
+
+      // Add aggregations if provided
+      if (Object.keys(aggregations).length > 0) {
+        searchBody.aggs = aggregations;
+      }
+
+      const result = await this.client.search({
+        index: this.indexName,
+        body: searchBody
+      });
+
+      return {
+        total: result.hits.total.value,
+        hits: result.hits.hits.map(hit => ({
+          _id: hit._id,
+          _score: hit._score,
+          ...hit._source,
+          highlight: hit.highlight
+        })),
+        aggregations: result.aggregations || {}
+      };
+
+    } catch (error) {
+      console.error('Advanced search error:', error.message);
+      throw new Error(`Advanced search failed: ${error.message}`);
+    }
+  }
+
+  /**
    * Delete PDF content by PDF ID
    * @param {string} pdfId - PDF identifier
    */

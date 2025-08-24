@@ -82,6 +82,18 @@ class ElasticsearchManager {
   }
 
   /**
+   * Advanced search with complex queries and aggregations
+   * @param {Object} query - Elasticsearch query object
+   * @param {Object} aggregations - Aggregation requests
+   * @param {Object} options - Search options
+   * @returns {Object} Search results with aggregations
+   */
+  async advancedSearch(query, aggregations = {}, options = {}) {
+    const service = this.getService();
+    return await service.advancedSearch(query, aggregations, options);
+  }
+
+  /**
    * Delete PDF content
    * @param {string} pdfId - PDF identifier
    */
