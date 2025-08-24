@@ -2,7 +2,12 @@ const amqp = require('amqplib');
 
 // RabbitMQ Configuration
 const RABBITMQ_CONFIG = {
-  url: process.env.RABBITMQ_URL || 'amqp://localhost:5672',
+  // Build URL with authentication if credentials are provided
+  url: process.env.RABBITMQ_URL || 
+       (process.env.RABBITMQ_USERNAME && process.env.RABBITMQ_PASSWORD) 
+         ? `amqp://${process.env.RABBITMQ_USERNAME}:${process.env.RABBITMQ_PASSWORD}@${process.env.RABBITMQ_HOST || 'localhost'}:${process.env.RABBITMQ_PORT || '5672'}`
+         : 'amqp://localhost:5672',
+  
   exchange: {
     name: 'pdf.exchange',
     type: 'direct',

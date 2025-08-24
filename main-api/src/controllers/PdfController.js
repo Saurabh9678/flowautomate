@@ -59,24 +59,32 @@ class PdfController {
       // Parse PDF and save JSON results
       const parsingResult = await parseAndSavePDF(pdfFilePath, pdfDir, `pdf_${pdfId}`);
 
+      // Update PDF status to 'ready'
+      await this.pdfService.updatePdfStatus(pdfId, 'ready');
+
       // Calculate JSON path dynamically (same directory as PDF)
       const pdfFileName = path.basename(pdfFilePath, '.pdf');
       const jsonPath = path.join(pdfDir, `${pdfFileName}.json`);
 
-      // Send message to RabbitMQ queue
-      await rabbitMQManager.sendPdfParsedMessage({
-        pdfId: pdfId,
-        userId: userId,
-        filename: path.basename(pdfFilePath),
-        jsonPath: jsonPath,
-        pageCount: parsingResult.pageCount,
-        textLength: parsingResult.textLength,
-        tableCount: parsingResult.tableCount,
-        parsedAt: new Date().toISOString()
-      });
+      // Send message to RabbitMQ queue (if available)
+      try {
+        await rabbitMQManager.sendPdfParsedMessage({
+          pdfId: pdfId,
+          userId: userId,
+          filename: path.basename(pdfFilePath),
+          jsonPath: jsonPath,
+          pageCount: parsingResult.pageCount,
+          textLength: parsingResult.textLength,
+          tableCount: parsingResult.tableCount,
+          parsedAt: new Date().toISOString()
+        });
+        console.log(`📤 Message sent to RabbitMQ queue for PDF ID: ${pdfId}`);
+      } catch (rabbitError) {
+        console.warn(`⚠️ Failed to send RabbitMQ message for PDF ID ${pdfId}:`, rabbitError.message);
+        console.log('📋 PDF processing completed successfully, but RabbitMQ messaging failed');
+      }
 
       console.log(`✅ PDF processing completed successfully for PDF ID: ${pdfId}`);
-      console.log(`📤 Message sent to RabbitMQ queue for PDF ID: ${pdfId}`);
       console.log(`📁 JSON file saved at: ${jsonPath}`);
 
     } catch (error) {
