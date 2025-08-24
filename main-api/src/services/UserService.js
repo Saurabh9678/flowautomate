@@ -8,7 +8,6 @@ class UserService {
   }
 
   async createUser(userData) {
-    // Hash password before saving
     const hashedPassword = await bcrypt.hash(userData.password, 12);
     
     const user = await this.userRepository.create({
@@ -16,7 +15,6 @@ class UserService {
       password: hashedPassword
     });
 
-    // Return user without password
     const { password, ...userWithoutPassword } = user.toJSON();
     return userWithoutPassword;
   }
@@ -31,28 +29,6 @@ class UserService {
     return userWithoutPassword;
   }
 
-  async updateUser(id, userData) {
-    // If password is being updated, hash it
-    if (userData.password) {
-      userData.password = await bcrypt.hash(userData.password, 12);
-    }
-
-    const user = await this.userRepository.update(id, userData);
-    const { password, ...userWithoutPassword } = user.toJSON();
-    return userWithoutPassword;
-  }
-
-  async deleteUser(id) {
-    return await this.userRepository.delete(id);
-  }
-
-  async getAllUsers() {
-    const users = await this.userRepository.findAll();
-    return users.map(user => {
-      const { password, ...userWithoutPassword } = user.toJSON();
-      return userWithoutPassword;
-    });
-  }
 
   async validateUser(username, password) {
     const user = await this.userRepository.findByUsername(username);

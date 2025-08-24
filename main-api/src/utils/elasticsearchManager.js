@@ -19,10 +19,10 @@ class ElasticsearchManager {
       this.elasticsearchService = new ElasticsearchService();
       await this.elasticsearchService.initialize();
       this.isInitialized = true;
-      console.log('✅ Elasticsearch Manager initialized successfully');
+      console.log('Elasticsearch Manager initialized successfully');
       return this.elasticsearchService;
     } catch (error) {
-      console.error('❌ Failed to initialize Elasticsearch Manager:', error.message);
+      console.error('Failed to initialize Elasticsearch Manager:', error.message);
       throw error;
     }
   }
@@ -32,32 +32,9 @@ class ElasticsearchManager {
    */
   getService() {
     if (!this.elasticsearchService) {
-      throw new Error('Elasticsearch not initialized. Call initialize() first.');
+      throw new Error('Elasticsearch not initialized.');
     }
     return this.elasticsearchService;
-  }
-
-  /**
-   * Transform PDF data to Elasticsearch documents (ETL function)
-   * @param {Object} pdfData - Parsed PDF data
-   * @param {string} pdfId - PDF identifier
-   * @param {string} userId - User identifier
-   * @returns {Array} Array of Elasticsearch documents
-   */
-  transformPdfDataToDocuments(pdfData, pdfId, userId) {
-    const service = this.getService();
-    return service.transformPdfDataToDocuments(pdfData, pdfId, userId);
-  }
-
-  /**
-   * Index PDF content (with integrated ETL)
-   * @param {Object} pdfData - Parsed PDF data
-   * @param {string} pdfId - PDF identifier
-   * @param {string} userId - User identifier
-   */
-  async indexPdfContent(pdfData, pdfId, userId) {
-    const service = this.getService();
-    return await service.indexPdfContent(pdfData, pdfId, userId);
   }
 
   /**
@@ -65,7 +42,7 @@ class ElasticsearchManager {
    * @param {Array} documents - Pre-transformed Elasticsearch documents
    * @param {string} pdfId - PDF identifier (for logging)
    */
-  async indexDocuments(documents, pdfId = 'unknown') {
+  async indexPDFDocuments(documents, pdfId = 'unknown') {
     const service = this.getService();
     return await service.indexDocuments(documents, pdfId);
   }
@@ -91,15 +68,6 @@ class ElasticsearchManager {
   async advancedSearch(query, aggregations = {}, options = {}) {
     const service = this.getService();
     return await service.advancedSearch(query, aggregations, options);
-  }
-
-  /**
-   * Delete PDF content
-   * @param {string} pdfId - PDF identifier
-   */
-  async deletePdfContent(pdfId) {
-    const service = this.getService();
-    return await service.deletePdfContent(pdfId);
   }
 
   /**
@@ -135,7 +103,7 @@ class ElasticsearchManager {
       await this.elasticsearchService.close();
       this.elasticsearchService = null;
       this.isInitialized = false;
-      console.log('✅ Elasticsearch Manager closed successfully');
+      console.log('Elasticsearch Manager closed successfully');
     }
   }
 }

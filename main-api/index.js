@@ -11,40 +11,37 @@ async function startServer() {
     // Connect to database
     await Database.connect();
     await Database.validateSchema();
-    console.log('✅ Database connected and schema validated');
+    console.log('Database connected and schema validated');
 
-    // Initialize RabbitMQ Producer (optional - won't fail server startup)
+    // Initialize RabbitMQ Producer
     try {
       await rabbitMQManager.initialize();
-      console.log('✅ RabbitMQ Producer initialized');
+      console.log('RabbitMQ Producer initialized');
     } catch (rabbitError) {
-      console.warn('⚠️ RabbitMQ Producer initialization failed:', rabbitError.message);
-      console.log('📋 PDF upload will work, but RabbitMQ messaging will be disabled');
+      console.warn('RabbitMQ Producer initialization failed:', rabbitError.message);
     }
 
-    // Initialize RabbitMQ Consumer (optional - won't fail server startup)
+    // Initialize RabbitMQ Consumer
     try {
       await rabbitMQConsumerManager.initialize();
-      console.log('✅ RabbitMQ Consumer initialized');
+      console.log('RabbitMQ Consumer initialized');
     } catch (rabbitError) {
-      console.warn('⚠️ RabbitMQ Consumer initialization failed:', rabbitError.message);
-      console.log('📋 PDF parsing will work, but message consumption will be disabled');
+      console.warn('RabbitMQ Consumer initialization failed:', rabbitError.message);
     }
 
-    // Initialize Elasticsearch (optional - won't fail server startup)
+    // Initialize Elasticsearch
     try {
       await elasticsearchManager.initialize();
-      console.log('✅ Elasticsearch initialized');
+      console.log('Elasticsearch initialized');
     } catch (esError) {
-      console.warn('⚠️ Elasticsearch initialization failed:', esError.message);
-      console.log('📋 PDF processing will work, but search functionality will be disabled');
+      console.warn('Elasticsearch initialization failed:', esError.message);
     }
 
     // Start server
     app.listen(PORT, () => {
-      console.log(`🚀 Server is running on port ${PORT}`);
-      console.log(`📋 API Documentation: http://localhost:${PORT}/v1`);
-      console.log(`🔗 Health Check: http://localhost:${PORT}/`);
+      console.log(`Server is running on port ${PORT}`);
+      console.log(`API Documentation: http://localhost:${PORT}/v1`);
+      console.log(`Health Check: http://localhost:${PORT}/v1`);
       
       // Show service status
       const producerStatus = rabbitMQManager.getStatus();
@@ -52,77 +49,77 @@ async function startServer() {
       const esStatus = elasticsearchManager.getStatus();
       
       if (producerStatus.isInitialized) {
-        console.log('📤 RabbitMQ Producer: ✅ Active');
+        console.log('RabbitMQ Producer: Active');
       } else {
-        console.log('📤 RabbitMQ Producer: ❌ Disabled');
+        console.log('RabbitMQ Producer: Disabled');
       }
       
       if (consumerStatus.isInitialized) {
-        console.log('📥 RabbitMQ Consumer: ✅ Active');
+        console.log('RabbitMQ Consumer: Active');
       } else {
-        console.log('📥 RabbitMQ Consumer: ❌ Disabled');
+        console.log('RabbitMQ Consumer: Disabled');
       }
       
       if (esStatus.isInitialized) {
-        console.log('🔍 Elasticsearch: ✅ Active');
+        console.log('Elasticsearch: Active');
       } else {
-        console.log('🔍 Elasticsearch: ❌ Disabled');
+        console.log('Elasticsearch: Disabled');
       }
     });
 
   } catch (error) {
-    console.error('❌ Failed to start server:', error.message);
+    console.error('Failed to start server:', error.message);
     process.exit(1);
   }
 }
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-  console.log('🛑 SIGTERM received, shutting down gracefully');
+  console.log('SIGTERM received, shutting down gracefully');
   try {
     await elasticsearchManager.close();
   } catch (error) {
-    console.warn('⚠️ Error closing Elasticsearch:', error.message);
+    console.warn('Error closing Elasticsearch:', error.message);
   }
   try {
     await rabbitMQConsumerManager.close();
   } catch (error) {
-    console.warn('⚠️ Error closing RabbitMQ Consumer:', error.message);
+    console.warn('Error closing RabbitMQ Consumer:', error.message);
   }
   try {
     await rabbitMQManager.close();
   } catch (error) {
-    console.warn('⚠️ Error closing RabbitMQ Producer:', error.message);
+    console.warn('Error closing RabbitMQ Producer:', error.message);
   }
   try {
     await Database.close();
   } catch (error) {
-    console.warn('⚠️ Error closing database:', error.message);
+    console.warn('Error closing database:', error.message);
   }
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
-  console.log('🛑 SIGINT received, shutting down gracefully');
+  console.log('SIGINT received, shutting down gracefully');
   try {
     await elasticsearchManager.close();
   } catch (error) {
-    console.warn('⚠️ Error closing Elasticsearch:', error.message);
+    console.warn('Error closing Elasticsearch:', error.message);
   }
   try {
     await rabbitMQConsumerManager.close();
   } catch (error) {
-    console.warn('⚠️ Error closing RabbitMQ Consumer:', error.message);
+    console.warn('Error closing RabbitMQ Consumer:', error.message);
   }
   try {
     await rabbitMQManager.close();
   } catch (error) {
-    console.warn('⚠️ Error closing RabbitMQ Producer:', error.message);
+    console.warn('Error closing RabbitMQ Producer:', error.message);
   }
   try {
     await Database.close();
   } catch (error) {
-    console.warn('⚠️ Error closing database:', error.message);
+    console.warn('Error closing database:', error.message);
   }
   process.exit(0);
 });

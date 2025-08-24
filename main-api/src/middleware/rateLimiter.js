@@ -9,8 +9,8 @@ const generalLimiter = rateLimit({
     message: 'Too many requests from this IP, please try again later.',
     retryAfter: '15 minutes'
   },
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  standardHeaders: true,
+  legacyHeaders: false,
   handler: (req, res) => {
     throw new TooManyRequestsError('Too many requests from this IP, please try again later.');
   }

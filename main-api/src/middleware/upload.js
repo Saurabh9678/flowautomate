@@ -104,41 +104,7 @@ const uploadSinglePDF = (req, res, next) => {
   });
 };
 
-// Utility function to get file path for a user
-const getUserFilePath = (userId, filename) => {
-  return path.join(uploadsDir, userId.toString(), filename);
-};
-
-// Utility function to check if file exists
-const fileExists = (userId, filename) => {
-  const filePath = getUserFilePath(userId, filename);
-  return fs.existsSync(filePath);
-};
-
-// Utility function to delete file
-const deleteFile = (userId, filename) => {
-  const filePath = getUserFilePath(userId, filename);
-  if (fs.existsSync(filePath)) {
-    fs.unlinkSync(filePath);
-    return true;
-  }
-  return false;
-};
-
-// Utility function to get file stats
-const getFileStats = (userId, filename) => {
-  const filePath = getUserFilePath(userId, filename);
-  if (fs.existsSync(filePath)) {
-    return fs.statSync(filePath);
-  }
-  return null;
-};
 
 module.exports = {
-  uploadSinglePDF,
-  getUserFilePath,
-  fileExists,
-  deleteFile,
-  getFileStats,
-  uploadsDir
+  uploadSinglePDF
 };

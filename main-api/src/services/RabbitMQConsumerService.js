@@ -20,15 +20,15 @@ class RabbitMQConsumerService {
    */
   async initialize() {
     try {
-      console.log('🔄 Initializing RabbitMQ Consumer...');
+      console.log('Initializing RabbitMQ Consumer...');
       
       // Create connection
       this.connection = await amqp.connect(RABBITMQ_CONFIG.url);
-      console.log('✅ RabbitMQ Consumer connection established');
+      console.log('RabbitMQ Consumer connection established');
 
       // Create channel
       this.channel = await this.connection.createChannel();
-      console.log('✅ RabbitMQ Consumer channel created');
+      console.log('RabbitMQ Consumer channel created');
 
       // Setup exchange
       await this.setupExchange();
@@ -43,23 +43,23 @@ class RabbitMQConsumerService {
       await this.startConsuming();
       
       this.isConnected = true;
-      console.log('✅ RabbitMQ Consumer initialized successfully');
+      console.log('RabbitMQ Consumer initialized successfully');
 
       // Handle connection close
       this.connection.on('close', () => {
-        console.log('❌ RabbitMQ Consumer connection closed');
+        console.log('RabbitMQ Consumer connection closed');
         this.isConnected = false;
         this.handleReconnect();
       });
 
       // Handle channel close
       this.channel.on('close', () => {
-        console.log('❌ RabbitMQ Consumer channel closed');
+        console.log('RabbitMQ Consumer channel closed');
         this.handleReconnect();
       });
 
     } catch (error) {
-      console.error('❌ Failed to initialize RabbitMQ Consumer:', error.message);
+      console.error('Failed to initialize RabbitMQ Consumer:', error.message);
       throw error;
     }
   }
@@ -74,9 +74,9 @@ class RabbitMQConsumerService {
         RABBITMQ_CONFIG.exchange.type,
         RABBITMQ_CONFIG.exchange.options
       );
-      console.log(`✅ Exchange '${RABBITMQ_CONFIG.exchange.name}' setup complete`);
+      console.log(`Exchange '${RABBITMQ_CONFIG.exchange.name}' setup complete`);
     } catch (error) {
-      console.error('❌ Failed to setup exchange:', error.message);
+      console.error('Failed to setup exchange:', error.message);
       throw error;
     }
   }
@@ -91,9 +91,9 @@ class RabbitMQConsumerService {
         queueConfig.name,
         queueConfig.options
       );
-      console.log(`✅ Queue '${queueConfig.name}' setup complete`);
+      console.log(`Queue '${queueConfig.name}' setup complete`);
     } catch (error) {
-      console.error('❌ Failed to setup queue:', error.message);
+      console.error('Failed to setup queue:', error.message);
       throw error;
     }
   }
@@ -109,9 +109,9 @@ class RabbitMQConsumerService {
         RABBITMQ_CONFIG.exchange.name,
         queueConfig.routingKey
       );
-      console.log(`✅ Binding setup complete: ${RABBITMQ_CONFIG.exchange.name} -> ${queueConfig.name} (${queueConfig.routingKey})`);
+      console.log(`Binding setup complete: ${RABBITMQ_CONFIG.exchange.name} -> ${queueConfig.name} (${queueConfig.routingKey})`);
     } catch (error) {
-      console.error('❌ Failed to setup binding:', error.message);
+      console.error('Failed to setup binding:', error.message);
       throw error;
     }
   }
@@ -134,11 +134,11 @@ class RabbitMQConsumerService {
       });
       
       this.consumerTag = result.consumerTag;
-      console.log(`✅ Started consuming from queue '${queueConfig.name}'`);
-      console.log(`📋 Consumer tag: ${this.consumerTag}`);
+      console.log(`Started consuming from queue '${queueConfig.name}'`);
+      console.log(`Consumer tag: ${this.consumerTag}`);
       
     } catch (error) {
-      console.error('❌ Failed to start consuming:', error.message);
+      console.error('Failed to start consuming:', error.message);
       throw error;
     }
   }
@@ -149,41 +149,26 @@ class RabbitMQConsumerService {
   async handleMessage(msg) {
     try {
       if (!msg) {
-        console.log('⚠️ Received null message');
+        console.log('Received null message');
         return;
       }
 
       // Parse message content
       const content = JSON.parse(msg.content.toString());
-      
-      console.log('\n📨 Received PDF Parsed Message:');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log(`📄 Message Type: ${content.type}`);
-      console.log(`⏰ Timestamp: ${content.timestamp}`);
-      console.log('📊 Data:');
-      console.log(`   📋 PDF ID: ${content.data.pdfId}`);
-      console.log(`   👤 User ID: ${content.data.userId}`);
-      console.log(`   📁 Filename: ${content.data.filename}`);
-      console.log(`   📄 JSON Path: ${content.data.jsonPath}`);
-      console.log(`   📖 Page Count: ${content.data.pageCount}`);
-      console.log(`   📝 Text Length: ${content.data.textLength}`);
-      console.log(`   📊 Table Count: ${content.data.tableCount}`);
-      console.log(`   🕐 Parsed At: ${content.data.parsedAt}`);
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
       // Process the PDF parsing message
       await this.processPdfParsedMessage(content.data);
 
       // Acknowledge the message
       this.channel.ack(msg);
-      console.log('✅ Message acknowledged successfully');
+      console.log('Message acknowledged successfully');
 
     } catch (error) {
-      console.error('❌ Error processing message:', error.message);
+      console.error('Error processing message:', error.message);
       
       // Reject the message and requeue it
       this.channel.nack(msg, false, true);
-      console.log('🔄 Message rejected and requeued');
+      console.log('Message rejected and requeued');
     }
   }
 
@@ -195,55 +180,49 @@ class RabbitMQConsumerService {
     const { pdfId, userId, jsonPath } = messageData;
     
     try {
-      console.log(`🔄 Processing PDF parsed message for PDF ID: ${pdfId}`);
+      console.log(`Processing PDF parsed message for PDF ID: ${pdfId}`);
 
       // Step 1: Read the JSON file
-      console.log(`📖 Reading JSON file: ${jsonPath}`);
+      console.log(`Reading JSON file: ${jsonPath}`);
       if (!fs.existsSync(jsonPath)) {
         throw new Error(`JSON file not found: ${jsonPath}`);
       }
 
       const jsonContent = fs.readFileSync(jsonPath, 'utf8');
       const pdfData = JSON.parse(jsonContent);
-      console.log(`✅ JSON file read successfully, ${pdfData.data.length} content items found`);
+      console.log(`JSON file read successfully, ${pdfData.data.length} content items found`);
 
       // Step 2: Run ETL transformation
-      console.log(`🔄 Running ETL transformation for PDF ID: ${pdfId}`);
+      console.log(`Running ETL transformation for PDF ID: ${pdfId}`);
       const documents = transformPdfDataToElasticsearchDocuments(pdfData, pdfId, userId);
-      console.log(`✅ ETL transformation completed, ${documents.length} documents created`);
+      console.log(`ETL transformation completed, ${documents.length} documents created`);
 
       // Step 3: Ingest into Elasticsearch
-      console.log(`🔄 Ingesting documents into Elasticsearch for PDF ID: ${pdfId}`);
+      console.log(`Ingesting documents into Elasticsearch for PDF ID: ${pdfId}`);
       const indexResult = await elasticsearchManager.indexDocuments(documents, pdfId);
       
       if (indexResult.success) {
-        console.log(`✅ Elasticsearch ingestion completed, ${indexResult.indexedCount} documents indexed`);
+        console.log(`Elasticsearch ingestion completed, ${indexResult.indexedCount} documents indexed`);
       } else {
         throw new Error(`Elasticsearch ingestion failed: ${indexResult.error}`);
       }
 
       // Step 4: Update database status to 'ready'
-      console.log(`🔄 Updating database status to 'ready' for PDF ID: ${pdfId}`);
+      console.log(`Updating database status to 'ready' for PDF ID: ${pdfId}`);
       await this.pdfService.updatePdfStatus(pdfId, 'ready');
-      console.log(`✅ Database status updated to 'ready' for PDF ID: ${pdfId}`);
+      console.log(`Database status updated to 'ready' for PDF ID: ${pdfId}`);
 
-      console.log(`🎉 Complete processing successful for PDF ID: ${pdfId}`);
-      console.log(`📊 Summary:`);
-      console.log(`   📄 PDF ID: ${pdfId}`);
-      console.log(`   👤 User ID: ${userId}`);
-      console.log(`   📖 Content Items: ${pdfData.data.length}`);
-      console.log(`   📝 Elasticsearch Documents: ${documents.length}`);
-      console.log(`   📊 Status: ready`);
+      console.log(`Complete processing successful for PDF ID: ${pdfId}`);
 
     } catch (error) {
-      console.error(`❌ Failed to process PDF parsed message for PDF ID ${pdfId}:`, error.message);
+      console.error(`Failed to process PDF parsed message for PDF ID ${pdfId}:`, error.message);
       
       // Update database status to 'failed' with error message
       try {
         await this.pdfService.updatePdfStatus(pdfId, 'failed', error.message);
-        console.log(`✅ Database status updated to 'failed' for PDF ID: ${pdfId}`);
+        console.log(`Database status updated to 'failed' for PDF ID: ${pdfId}`);
       } catch (dbError) {
-        console.error(`❌ Failed to update database status for PDF ID ${pdfId}:`, dbError.message);
+        console.error(`Failed to update database status for PDF ID ${pdfId}:`, dbError.message);
       }
       
       throw error; // Re-throw to trigger message rejection
@@ -256,12 +235,12 @@ class RabbitMQConsumerService {
   async handleReconnect() {
     if (this.isConnected) return;
     
-    console.log('🔄 Attempting to reconnect RabbitMQ Consumer...');
+    console.log('Attempting to reconnect RabbitMQ Consumer...');
     
     try {
       await this.initialize();
     } catch (error) {
-      console.error('❌ Reconnection failed:', error.message);
+      console.error('Reconnection failed:', error.message);
       
       // Retry after 5 seconds
       setTimeout(() => {
@@ -277,11 +256,11 @@ class RabbitMQConsumerService {
     try {
       if (this.consumerTag) {
         await this.channel.cancel(this.consumerTag);
-        console.log('🛑 Stopped consuming messages');
+        console.log('Stopped consuming messages');
         this.consumerTag = null;
       }
     } catch (error) {
-      console.error('❌ Error stopping consumer:', error.message);
+      console.error('Error stopping consumer:', error.message);
     }
   }
 
@@ -290,7 +269,7 @@ class RabbitMQConsumerService {
    */
   async close() {
     try {
-      console.log('🛑 Closing RabbitMQ Consumer...');
+      console.log('Closing RabbitMQ Consumer...');
       
       // Stop consuming
       await this.stopConsuming();
@@ -308,10 +287,10 @@ class RabbitMQConsumerService {
       }
       
       this.isConnected = false;
-      console.log('✅ RabbitMQ Consumer closed successfully');
+      console.log('RabbitMQ Consumer closed successfully');
       
     } catch (error) {
-      console.error('❌ Error closing RabbitMQ Consumer:', error.message);
+      console.error('Error closing RabbitMQ Consumer:', error.message);
     }
   }
 

@@ -16,20 +16,20 @@ class RabbitMQService {
    */
   async initialize() {
     try {
-      console.log('🔄 Initializing RabbitMQ connection...');
+      console.log('Initializing RabbitMQ connection...');
       
       // Create connection
       this.connection = await amqp.connect(RABBITMQ_CONFIG.url, RABBITMQ_CONFIG.options);
       
       // Handle connection events
       this.connection.on('error', (error) => {
-        console.error('❌ RabbitMQ connection error:', error);
+        console.error('RabbitMQ connection error:', error);
         this.isConnected = false;
         this.handleReconnect();
       });
 
       this.connection.on('close', () => {
-        console.warn('⚠️ RabbitMQ connection closed');
+        console.warn('RabbitMQ connection closed');
         this.isConnected = false;
         this.handleReconnect();
       });
@@ -39,11 +39,11 @@ class RabbitMQService {
       
       // Handle channel events
       this.channel.on('error', (error) => {
-        console.error('❌ RabbitMQ channel error:', error);
+        console.error('RabbitMQ channel error:', error);
       });
 
       this.channel.on('return', (msg) => {
-        console.warn('⚠️ RabbitMQ message returned:', msg);
+        console.warn('RabbitMQ message returned:', msg);
       });
 
       // Setup exchange
@@ -57,10 +57,10 @@ class RabbitMQService {
 
       this.isConnected = true;
       this.reconnectAttempts = 0;
-      console.log('✅ RabbitMQ connection established successfully');
+      console.log('RabbitMQ connection established successfully');
       
     } catch (error) {
-      console.error('❌ Failed to initialize RabbitMQ:', error);
+      console.error('Failed to initialize RabbitMQ:', error);
       this.handleReconnect();
       throw error;
     }
@@ -78,9 +78,9 @@ class RabbitMQService {
           durable: RABBITMQ_CONFIG.exchange.durable
         }
       );
-      console.log('✅ Exchange setup completed:', RABBITMQ_CONFIG.exchange.name);
+      console.log('Exchange setup completed:', RABBITMQ_CONFIG.exchange.name);
     } catch (error) {
-      console.error('❌ Failed to setup exchange:', error);
+      console.error('Failed to setup exchange:', error);
       throw error;
     }
   }
@@ -99,10 +99,10 @@ class RabbitMQService {
           durable: queue.durable
         });
         
-        console.log('✅ Queue setup completed:', queue.name);
+        console.log('Queue setup completed:', queue.name);
       }
     } catch (error) {
-      console.error('❌ Failed to setup queues:', error);
+      console.error('Failed to setup queues:', error);
       throw error;
     }
   }
@@ -123,10 +123,10 @@ class RabbitMQService {
           queue.routingKey
         );
         
-        console.log('✅ Binding setup completed:', `${queue.name} -> ${queue.routingKey}`);
+        console.log('Binding setup completed:', `${queue.name} -> ${queue.routingKey}`);
       }
     } catch (error) {
-      console.error('❌ Failed to setup bindings:', error);
+      console.error('Failed to setup bindings:', error);
       throw error;
     }
   }
@@ -165,15 +165,15 @@ class RabbitMQService {
       );
 
       if (result) {
-        console.log(`✅ Message sent to queue '${queue.name}' with routing key '${queue.routingKey}'`);
+        console.log(`Message sent to queue '${queue.name}' with routing key '${queue.routingKey}'`);
         return true;
       } else {
-        console.warn(`⚠️ Message not sent to queue '${queue.name}' - channel write buffer is full`);
+        console.warn(`Message not sent to queue '${queue.name}' - channel write buffer is full`);
         return false;
       }
 
     } catch (error) {
-      console.error('❌ Failed to send message:', error);
+      console.error('Failed to send message:', error);
       throw error;
     }
   }
@@ -196,18 +196,18 @@ class RabbitMQService {
    */
   async handleReconnect() {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error('❌ Max reconnection attempts reached');
+      console.error('Max reconnection attempts reached');
       return;
     }
 
     this.reconnectAttempts++;
-    console.log(`🔄 Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
+    console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
 
     setTimeout(async () => {
       try {
         await this.initialize();
       } catch (error) {
-        console.error('❌ Reconnection failed:', error);
+        console.error('Reconnection failed:', error);
       }
     }, this.reconnectDelay);
   }
@@ -219,17 +219,17 @@ class RabbitMQService {
     try {
       if (this.channel) {
         await this.channel.close();
-        console.log('✅ RabbitMQ channel closed');
+        console.log('RabbitMQ channel closed');
       }
 
       if (this.connection) {
         await this.connection.close();
-        console.log('✅ RabbitMQ connection closed');
+        console.log('RabbitMQ connection closed');
       }
 
       this.isConnected = false;
     } catch (error) {
-      console.error('❌ Error closing RabbitMQ connection:', error);
+      console.error('Error closing RabbitMQ connection:', error);
     }
   }
 

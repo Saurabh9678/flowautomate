@@ -19,10 +19,10 @@ class RabbitMQManager {
       this.rabbitMQService = new RabbitMQService();
       await this.rabbitMQService.initialize();
       this.isInitialized = true;
-      console.log('✅ RabbitMQ manager initialized successfully');
+      console.log('RabbitMQ manager initialized successfully');
       return this.rabbitMQService;
     } catch (error) {
-      console.error('❌ Failed to initialize RabbitMQ manager:', error);
+      console.error('Failed to initialize RabbitMQ manager:', error);
       throw error;
     }
   }
@@ -73,7 +73,7 @@ class RabbitMQManager {
     if (this.rabbitMQService) {
       await this.rabbitMQService.close();
       this.isInitialized = false;
-      console.log('✅ RabbitMQ manager closed');
+      console.log('RabbitMQ manager closed');
     }
   }
 }

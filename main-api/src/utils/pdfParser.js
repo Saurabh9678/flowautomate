@@ -21,9 +21,8 @@ async function parseFullPDF(filePath) {
   const data = await pdf(dataBuffer);
   let extractedText = data.text;
 
-  // 2. Extract tables (multiple approaches)
+  // 2. Extract tables
   try {
-    // First try pdf-table-extractor
     result.tables = await new Promise((resolve, reject) => {
       pdf_table_extractor(filePath, (output) => {
         if (output && output.pageTables) {
@@ -126,7 +125,7 @@ async function parseFullPDF(filePath) {
           const afterTable = textLines.slice(tableEndIndex);
           extractedText = [...beforeTable, ...afterTable].join('\n');
           
-          console.log(`✅ Found table with ${tableRows.length} rows and ${headers.length} columns`);
+          console.log(`Found table with ${tableRows.length} rows and ${headers.length} columns`);
         }
       }
       
@@ -152,7 +151,7 @@ async function parseFullPDF(filePath) {
             rowCount: potentialTables.length - 1,
             columnCount: potentialTables[0] ? potentialTables[0].length : 0
           }];
-          console.log(`✅ Found table with ${potentialTables.length - 1} rows using generic pattern`);
+          console.log(`Found table with ${potentialTables.length - 1} rows using generic pattern`);
         }
       }
     }
@@ -318,7 +317,7 @@ function saveToJSON(structuredData, outputPath) {
   }
   
   fs.writeFileSync(outputPath, JSON.stringify(structuredData, null, 2));
-  console.log(`✅ Structured data saved to: ${outputPath}`);
+  console.log(`Structured data saved to: ${outputPath}`);
 }
 
 /**
@@ -328,9 +327,9 @@ function saveToJSON(structuredData, outputPath) {
  * @param {string} pdfId - unique identifier for the PDF
  * @returns {Promise<Object>} parsing results
  */
-async function parseAndSavePDF(pdfFilePath, outputDir, pdfId) {
+async function parseAndSavePDFJSON(pdfFilePath, outputDir, pdfId) {
   try {
-    console.log(`🔄 Starting PDF parsing for: ${pdfFilePath}`);
+    console.log(`Starting PDF parsing for: ${pdfFilePath}`);
     
     // Parse the PDF
     const parsedData = await parseFullPDF(pdfFilePath);
@@ -349,10 +348,10 @@ async function parseAndSavePDF(pdfFilePath, outputDir, pdfId) {
     
     saveToJSON(structuredData, outputPath);
     
-    console.log(`✅ PDF parsing completed successfully`);
-    console.log(`📄 Page count: ${pageCount}`);
-    console.log(`📝 Text length: ${parsedData.text.length}`);
-    console.log(`📊 Table count: ${parsedData.tables.length}`);
+    console.log(`PDF parsing completed successfully`);
+    console.log(`Page count: ${pageCount}`);
+    console.log(`Text length: ${parsedData.text.length}`);
+    console.log(`Table count: ${parsedData.tables.length}`);
     
     return {
       success: true,
@@ -365,7 +364,7 @@ async function parseAndSavePDF(pdfFilePath, outputDir, pdfId) {
     };
     
   } catch (error) {
-    console.error(`❌ PDF parsing failed: ${error.message}`);
+    console.error(`PDF parsing failed: ${error.message}`);
     throw error;
   }
 }
@@ -374,5 +373,5 @@ module.exports = {
   parseFullPDF,
   convertToStructuredJSON,
   saveToJSON,
-  parseAndSavePDF
+  parseAndSavePDFJSON
 };

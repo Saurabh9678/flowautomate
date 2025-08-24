@@ -19,10 +19,10 @@ class RabbitMQConsumerManager {
       this.consumerService = new RabbitMQConsumerService();
       await this.consumerService.initialize();
       this.isInitialized = true;
-      console.log('✅ RabbitMQ Consumer Manager initialized successfully');
+      console.log('RabbitMQ Consumer Manager initialized successfully');
       return this.consumerService;
     } catch (error) {
-      console.error('❌ Failed to initialize RabbitMQ Consumer Manager:', error.message);
+      console.error('Failed to initialize RabbitMQ Consumer Manager:', error.message);
       throw error;
     }
   }
@@ -32,7 +32,7 @@ class RabbitMQConsumerManager {
    */
   getConsumer() {
     if (!this.consumerService) {
-      throw new Error('RabbitMQ Consumer not initialized. Call initialize() first.');
+      throw new Error('RabbitMQ Consumer not initialized');
     }
     return this.consumerService;
   }
@@ -62,7 +62,7 @@ class RabbitMQConsumerManager {
       await this.consumerService.close();
       this.consumerService = null;
       this.isInitialized = false;
-      console.log('✅ RabbitMQ Consumer Manager closed successfully');
+      console.log('RabbitMQ Consumer Manager closed successfully');
     }
   }
 }

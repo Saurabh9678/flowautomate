@@ -1,13 +1,5 @@
 const { ValidationError } = require('../utils/CustomError');
 
-/**
- * Joi validation middleware factory
- * Creates a middleware function that validates request data against a Joi schema
- * 
- * @param {Object} schema - Joi validation schema
- * @param {string} validationType - Type of validation ('body', 'params', 'query')
- * @returns {Function} Express middleware function
- */
 const validateJoi = (schema, validationType = 'body') => {
   return (req, res, next) => {
     try {

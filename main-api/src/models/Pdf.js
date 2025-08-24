@@ -49,7 +49,7 @@ module.exports = (sequelize, DataTypes) => {
     underscored: true,
     paranoid: true, // This enables soft deletes using deleted_at
     createdAt: 'created_at',
-    updatedAt: false, // No updated_at field in your schema
+    updatedAt: false,
     deletedAt: 'deleted_at'
   });
 

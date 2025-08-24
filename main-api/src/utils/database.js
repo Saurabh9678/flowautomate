@@ -5,16 +5,16 @@ class Database {
   static async connect() {
     try {
       await sequelize.authenticate();
-      console.log('✅ Database connection established successfully.');
+      console.log('Database connection established successfully.');
     } catch (error) {
-      console.error('❌ Unable to connect to the database:', error);
+      console.error('Unable to connect to the database:', error);
       throw error;
     }
   }
 
   static async validateSchema() {
     try {
-      console.log('🔍 Validating database schema against models...');
+      console.log('Validating database schema against models...');
       
       // Get all models
       const models = sequelize.models;
@@ -28,7 +28,7 @@ class Database {
           // Check if table exists
           const tableExists = await sequelize.getQueryInterface().showAllTables();
           if (!tableExists.includes(tableName)) {
-            validationErrors.push(`❌ Table '${tableName}' for model '${modelName}' does not exist in database`);
+            validationErrors.push(`Table '${tableName}' for model '${modelName}' does not exist in database`);
             continue;
           }
 
@@ -41,31 +41,31 @@ class Database {
           // Check for missing columns in database
           for (const [attrName, attrDef] of Object.entries(modelAttributes)) {
             if (!tableDescription[attrName]) {
-              validationErrors.push(`❌ Column '${attrName}' missing in table '${tableName}' for model '${modelName}'`);
+              validationErrors.push(`Column '${attrName}' missing in table '${tableName}' for model '${modelName}'`);
             }
           }
 
-          // Check for extra columns in database (optional - you can remove this if you want to allow extra columns)
+          // Check for extra columns in database
           for (const [colName, colDef] of Object.entries(tableDescription)) {
             if (!modelAttributes[colName] && colName !== 'id') {
-              validationErrors.push(`❌ Extra column '${colName}' found in table '${tableName}' not defined in model '${modelName}'`);
+              validationErrors.push(`Extra column '${colName}' found in table '${tableName}' not defined in model '${modelName}'`);
             }
           }
 
         } catch (error) {
-          validationErrors.push(`❌ Error validating model '${modelName}': ${error.message}`);
+          validationErrors.push(`Error validating model '${modelName}': ${error.message}`);
         }
       }
 
       if (validationErrors.length > 0) {
-        console.error('🚨 Schema validation failed:');
+        console.error('Schema validation failed:');
         validationErrors.forEach(error => console.error(error));
         throw new BadRequestError(`Database schema mismatch detected. Please update your database schema or models.\n${validationErrors.join('\n')}`);
       }
 
-      console.log('✅ Database schema validation passed');
+      console.log('Database schema validation passed');
     } catch (error) {
-      console.error('❌ Schema validation error:', error.message);
+      console.error('Schema validation error:', error.message);
       throw error;
     }
   }
@@ -73,9 +73,9 @@ class Database {
   static async close() {
     try {
       await sequelize.close();
-      console.log('✅ Database connection closed.');
+      console.log('Database connection closed.');
     } catch (error) {
-      console.error('❌ Error closing database connection:', error);
+      console.error('Error closing database connection:', error);
       throw error;
     }
   }
