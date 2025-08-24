@@ -59,9 +59,6 @@ class PdfController {
       // Parse PDF and save JSON results
       const parsingResult = await parseAndSavePDF(pdfFilePath, pdfDir, `pdf_${pdfId}`);
 
-      // Update PDF status to 'ready'
-      await this.pdfService.updatePdfStatus(pdfId, 'ready');
-
       // Calculate JSON path dynamically (same directory as PDF)
       const pdfFileName = path.basename(pdfFilePath, '.pdf');
       const jsonPath = path.join(pdfDir, `${pdfFileName}.json`);
@@ -82,6 +79,10 @@ class PdfController {
       } catch (rabbitError) {
         console.warn(`⚠️ Failed to send RabbitMQ message for PDF ID ${pdfId}:`, rabbitError.message);
         console.log('📋 PDF processing completed successfully, but RabbitMQ messaging failed');
+        
+        // If RabbitMQ fails, update status to 'ready' directly
+        await this.pdfService.updatePdfStatus(pdfId, 'ready');
+        console.log(`✅ Database status updated to 'ready' for PDF ID: ${pdfId} (direct update)`);
       }
 
       console.log(`✅ PDF processing completed successfully for PDF ID: ${pdfId}`);

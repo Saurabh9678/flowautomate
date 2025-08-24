@@ -1,5 +1,10 @@
 const amqp = require('amqplib');
 const RABBITMQ_CONFIG = require('../config/rabbitmq');
+const fs = require('fs');
+const path = require('path');
+const { transformPdfDataToElasticsearchDocuments } = require('../utils/etlUtils');
+const elasticsearchManager = require('../utils/elasticsearchManager');
+const PdfService = require('./PdfService');
 
 class RabbitMQConsumerService {
   constructor() {
@@ -7,6 +12,7 @@ class RabbitMQConsumerService {
     this.channel = null;
     this.isConnected = false;
     this.consumerTag = null;
+    this.pdfService = new PdfService();
   }
 
   /**
@@ -165,6 +171,9 @@ class RabbitMQConsumerService {
       console.log(`   🕐 Parsed At: ${content.data.parsedAt}`);
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
+      // Process the PDF parsing message
+      await this.processPdfParsedMessage(content.data);
+
       // Acknowledge the message
       this.channel.ack(msg);
       console.log('✅ Message acknowledged successfully');
@@ -175,6 +184,69 @@ class RabbitMQConsumerService {
       // Reject the message and requeue it
       this.channel.nack(msg, false, true);
       console.log('🔄 Message rejected and requeued');
+    }
+  }
+
+  /**
+   * Process PDF parsed message - ETL and Elasticsearch ingestion
+   * @param {Object} messageData - Message data containing PDF information
+   */
+  async processPdfParsedMessage(messageData) {
+    const { pdfId, userId, jsonPath } = messageData;
+    
+    try {
+      console.log(`🔄 Processing PDF parsed message for PDF ID: ${pdfId}`);
+
+      // Step 1: Read the JSON file
+      console.log(`📖 Reading JSON file: ${jsonPath}`);
+      if (!fs.existsSync(jsonPath)) {
+        throw new Error(`JSON file not found: ${jsonPath}`);
+      }
+
+      const jsonContent = fs.readFileSync(jsonPath, 'utf8');
+      const pdfData = JSON.parse(jsonContent);
+      console.log(`✅ JSON file read successfully, ${pdfData.data.length} content items found`);
+
+      // Step 2: Run ETL transformation
+      console.log(`🔄 Running ETL transformation for PDF ID: ${pdfId}`);
+      const documents = transformPdfDataToElasticsearchDocuments(pdfData, pdfId, userId);
+      console.log(`✅ ETL transformation completed, ${documents.length} documents created`);
+
+      // Step 3: Ingest into Elasticsearch
+      console.log(`🔄 Ingesting documents into Elasticsearch for PDF ID: ${pdfId}`);
+      const indexResult = await elasticsearchManager.indexDocuments(documents, pdfId);
+      
+      if (indexResult.success) {
+        console.log(`✅ Elasticsearch ingestion completed, ${indexResult.indexedCount} documents indexed`);
+      } else {
+        throw new Error(`Elasticsearch ingestion failed: ${indexResult.error}`);
+      }
+
+      // Step 4: Update database status to 'ready'
+      console.log(`🔄 Updating database status to 'ready' for PDF ID: ${pdfId}`);
+      await this.pdfService.updatePdfStatus(pdfId, 'ready');
+      console.log(`✅ Database status updated to 'ready' for PDF ID: ${pdfId}`);
+
+      console.log(`🎉 Complete processing successful for PDF ID: ${pdfId}`);
+      console.log(`📊 Summary:`);
+      console.log(`   📄 PDF ID: ${pdfId}`);
+      console.log(`   👤 User ID: ${userId}`);
+      console.log(`   📖 Content Items: ${pdfData.data.length}`);
+      console.log(`   📝 Elasticsearch Documents: ${documents.length}`);
+      console.log(`   📊 Status: ready`);
+
+    } catch (error) {
+      console.error(`❌ Failed to process PDF parsed message for PDF ID ${pdfId}:`, error.message);
+      
+      // Update database status to 'failed' with error message
+      try {
+        await this.pdfService.updatePdfStatus(pdfId, 'failed', error.message);
+        console.log(`✅ Database status updated to 'failed' for PDF ID: ${pdfId}`);
+      } catch (dbError) {
+        console.error(`❌ Failed to update database status for PDF ID ${pdfId}:`, dbError.message);
+      }
+      
+      throw error; // Re-throw to trigger message rejection
     }
   }
 

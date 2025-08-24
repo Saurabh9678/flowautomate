@@ -2,6 +2,7 @@ const app = require('./src/app');
 const Database = require('./src/utils/database');
 const rabbitMQManager = require('./src/utils/rabbitmqManager');
 const rabbitMQConsumerManager = require('./src/utils/rabbitmqConsumerManager');
+const elasticsearchManager = require('./src/utils/elasticsearchManager');
 
 const PORT = process.env.PORT || 3000;
 
@@ -30,15 +31,25 @@ async function startServer() {
       console.log('📋 PDF parsing will work, but message consumption will be disabled');
     }
 
+    // Initialize Elasticsearch (optional - won't fail server startup)
+    try {
+      await elasticsearchManager.initialize();
+      console.log('✅ Elasticsearch initialized');
+    } catch (esError) {
+      console.warn('⚠️ Elasticsearch initialization failed:', esError.message);
+      console.log('📋 PDF processing will work, but search functionality will be disabled');
+    }
+
     // Start server
     app.listen(PORT, () => {
       console.log(`🚀 Server is running on port ${PORT}`);
       console.log(`📋 API Documentation: http://localhost:${PORT}/v1`);
       console.log(`🔗 Health Check: http://localhost:${PORT}/`);
       
-      // Show RabbitMQ status
+      // Show service status
       const producerStatus = rabbitMQManager.getStatus();
       const consumerStatus = rabbitMQConsumerManager.getStatus();
+      const esStatus = elasticsearchManager.getStatus();
       
       if (producerStatus.isInitialized) {
         console.log('📤 RabbitMQ Producer: ✅ Active');
@@ -51,6 +62,12 @@ async function startServer() {
       } else {
         console.log('📥 RabbitMQ Consumer: ❌ Disabled');
       }
+      
+      if (esStatus.isInitialized) {
+        console.log('🔍 Elasticsearch: ✅ Active');
+      } else {
+        console.log('🔍 Elasticsearch: ❌ Disabled');
+      }
     });
 
   } catch (error) {
@@ -62,6 +79,11 @@ async function startServer() {
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('🛑 SIGTERM received, shutting down gracefully');
+  try {
+    await elasticsearchManager.close();
+  } catch (error) {
+    console.warn('⚠️ Error closing Elasticsearch:', error.message);
+  }
   try {
     await rabbitMQConsumerManager.close();
   } catch (error) {
@@ -82,6 +104,11 @@ process.on('SIGTERM', async () => {
 
 process.on('SIGINT', async () => {
   console.log('🛑 SIGINT received, shutting down gracefully');
+  try {
+    await elasticsearchManager.close();
+  } catch (error) {
+    console.warn('⚠️ Error closing Elasticsearch:', error.message);
+  }
   try {
     await rabbitMQConsumerManager.close();
   } catch (error) {
