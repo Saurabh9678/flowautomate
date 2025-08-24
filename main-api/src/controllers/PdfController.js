@@ -29,15 +29,7 @@ class PdfController {
     const pdf = await this.pdfService.createPdf(userId, uploadedFile.filename);
     
     // Send success response to client immediately
-    successResponse(res, 201, {
-      ...pdf,
-      fileInfo: {
-        originalName: uploadedFile.originalName,
-        filename: uploadedFile.filename,
-        size: uploadedFile.size,
-        mimetype: uploadedFile.mimetype
-      }
-    }, 'PDF uploaded and created successfully', null);
+    successResponse(res, 201, null, 'PDF uploaded and created successfully', null);
 
     // Start PDF parsing process asynchronously (after response is sent)
     this.processPdfAsync(pdf.id, uploadedFile.path, userId);
