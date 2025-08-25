@@ -1,244 +1,208 @@
-# Main API - Clean Architecture with PostgreSQL
+# Main API - Clean Architecture with Event-Driven PDF Processing
 
-A Node.js API built with Express.js and PostgreSQL using Clean Architecture principles. The application automatically handles database schema migrations and provides a robust foundation for building scalable APIs.
+A comprehensive Node.js API built with **Express.js**, **PostgreSQL**, and **Elasticsearch** using Clean Architecture principles. This project follows **DRY (Don't Repeat Yourself)** principle and implements an **event-driven architecture** for scalable PDF processing and search capabilities.
+
+## 🎯 Overview
+
+This project provides a complete solution for user management, PDF upload, processing, and intelligent search functionality. It features **JWT token-based authentication**, **rate limiting** for security, and leverages **RabbitMQ** for event-driven processing. When a PDF is uploaded and parsed, an event is generated and queued. The consumer processes these events through an **ETL pipeline** for data cleaning and transformation, storing the processed data in **Elasticsearch** for efficient searching. The system ensures reliable message processing with acknowledgment mechanisms.
+
+### 🛠️ **Tech Stack**
+- **Backend Framework**: **Express.js** with **Node.js**
+- **Database**: **PostgreSQL** with **Sequelize ORM**
+- **Search Engine**: **Elasticsearch**
+- **Message Queue**: **RabbitMQ**
+- **Authentication**: **JWT (JSON Web Tokens)**
+- **Security**: **Rate Limiting**, **Helmet**, **CORS**
+- **File Processing**: **PDF parsing and ETL pipeline**
+- **Architecture**: **Clean Architecture** with **Event-Driven Design**
 
 ## 🏗️ Architecture
 
-This project follows Clean Architecture principles with the following structure:
+The file structure of this project, along with a description of the contents of each file, is provided below.:
 
 ```
 src/
+├── config/          # Configuration files for external services
+│   ├── database.js      # PostgreSQL database configuration
+│   ├── elasticsearch.js # Elasticsearch connection setup
+│   └── rabbitmq.js      # RabbitMQ connection configuration
 ├── controllers/     # HTTP request/response handlers
+│   ├── UserController.js    # User authentication and management
+│   ├── PdfController.js     # PDF upload and management
+│   └── SearchController.js  # Search functionality
 ├── services/        # Business logic layer
+│   ├── UserService.js           # User business logic
+│   ├── PdfService.js            # PDF processing logic
+│   ├── ElasticsearchService.js  # Search and indexing operations
+│   ├── RabbitMQService.js       # Message queue producer
+│   └── RabbitMQConsumerService.js # Message queue consumer
 ├── repositories/    # Data access layer
+│   ├── BaseRepository.js    # Base repository with common CRUD operations
+│   ├── UserRepository.js    # User data access operations
+│   └── PdfRepository.js     # PDF data access operations
 ├── models/          # Sequelize models
+│   ├── index.js     # Model associations and database connection
+│   ├── User.js      # User model definition
+│   └── Pdf.js       # PDF model definition
 ├── routes/          # API route definitions
+│   ├── v1.js            # Main router with versioning
+│   ├── userRoutes.js    # User-related endpoints
+│   ├── pdfRoutes.js     # PDF-related endpoints
+│   └── searchRoutes.js  # Search-related endpoints
 ├── middleware/      # Express middleware
-├── migrations/      # Database migrations
-├── utils/           # Utility functions
-└── app.js          # Express application setup
+│   ├── auth.js          # JWT authentication middleware
+│   ├── rateLimiter.js   # Rate limiting for API protection
+│   ├── upload.js        # File upload handling
+│   ├── errorHandler.js  # Global error handling
+│   ├── asyncHandler.js  # Async error wrapper
+│   └── joiValidation.js # Request validation
+├── utils/           # Utility functions and helpers
+│   ├── apiResponse.js           # Standardized API responses
+│   ├── CustomError.js           # Custom error classes
+│   ├── jwt.js                   # JWT token utilities
+│   ├── database.js              # Database utilities
+│   ├── pdfParser.js             # PDF parsing and extraction
+│   ├── etlUtils.js              # ETL pipeline utilities
+│   ├── elasticsearchManager.js  # Elasticsearch connection management
+│   ├── rabbitmqManager.js       # RabbitMQ connection management
+│   └── rabbitmqConsumerManager.js # Consumer management
+├── validations/     # Request validation schemas
+│   └── userValidation.js    # User input validation rules
+└── app.js          # Express application setup and configuration
 ```
 
-## 🚀 Features
 
-- **Clean Architecture**: Separation of concerns with layers (Controllers, Services, Repositories)
-- **Automatic Migrations**: Database schema changes are automatically detected and applied
-- **PostgreSQL Integration**: Robust database with Sequelize ORM
-- **Security**: Helmet, CORS, input validation
-- **Error Handling**: Comprehensive error handling middleware
-- **Logging**: Request logging with Morgan
-- **Environment Configuration**: Environment-based configuration
+## 🏗️ System Design Diagram
+
+For a visual representation of the system architecture, data flow, and component interactions, check out our FigJam board:
+
+**[🎨 View System Design Diagram](https://www.figma.com/board/og7yUwMzvAxm6Ut51Blky0/Untitled?node-id=0-1&t=r7gh7gtnL5PI0EKE-1)**
+
+The diagram illustrates the complete system architecture including user flows, data processing pipelines, event-driven communication, and infrastructure components.
+
+## 🗄️ Database Schema Diagram
+
+For a detailed view of the database structure, table relationships, and data models, explore our interactive schema diagram:
+
+**[📊 View Database Schema](https://dbdocs.io/gohainsaurabh/FlowAutomate?view=relationships)**
+
+The schema diagram shows the complete database design including table structures, foreign key relationships, indexes, and data types for the PostgreSQL database.
+
+## 📚 API Documentation
+
+For detailed API documentation with examples and testing capabilities, visit our Postman collection:
+
+**[📖 View API Documentation](https://documenter.getpostman.com/view/32094781/2sB3BLkTua)**
+
+The documentation includes all available endpoints, request/response examples, authentication methods, and testing scenarios for the complete API.
 
 ## 📋 Prerequisites
 
 - Node.js (v14 or higher)
-- PostgreSQL (v12 or higher)
 - npm or yarn
+- Docker (for local external services setup)
+- Git
 
-## 🛠️ Installation
+## 🚀 Setup Instructions
 
-1. **Clone the repository and navigate to the main-api folder:**
-   ```bash
-   cd main-api
-   ```
+### 1. Clone the Project
+```bash
+git clone <repository-url>
+cd flowautomate/main-api
+```
 
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+### 2. Setup External Services (Optional - Local Development)
 
-3. **Set up environment variables:**
-   ```bash
-   cp env.example .env
-   ```
-   
-   Edit `.env` file with your database credentials:
-   ```env
-   DB_HOST=localhost
-   DB_PORT=5432
-   DB_NAME=flowautomate_db
-   DB_USER=postgres
-   DB_PASSWORD=your_password
-   PORT=3000
-   NODE_ENV=development
-   JWT_SECRET=your_jwt_secret_key_here
-   JWT_EXPIRES_IN=24h
-   CORS_ORIGIN=http://localhost:3000
-   ```
+If you want to run external services locally using Docker, execute the setup script:
 
-4. **Create PostgreSQL database:**
-   ```sql
-   CREATE DATABASE flowautomate_db;
-   ```
+```bash
+cd ../scripts
+./setup-infra.sh
+```
 
-## 🏃‍♂️ Running the Application
+This will start Docker containers for:
+- PostgreSQL database
+- Elasticsearch
+- RabbitMQ
 
-### Development Mode
+### 3. Database Setup
+
+#### Create Database
+```sql
+CREATE DATABASE flowautomate_db;
+```
+
+#### Access PostgreSQL Container
+```bash
+docker exec -it local_postgres psql -U admin -d flowautomate_db
+```
+
+#### Create Users Table
+```sql
+CREATE TABLE users (
+    id BIGSERIAL PRIMARY KEY,
+    username VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+    deleted_at TIMESTAMP
+);
+```
+
+#### Create PDFs Table
+```sql
+CREATE TABLE pdfs (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    pdf_path TEXT NOT NULL,
+    status TEXT CHECK (status IN ('queued', 'parsing', 'transform', 'ready', 'failed')) DEFAULT 'queued',
+    error TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP WITH TIME ZONE,
+
+    CONSTRAINT fk_pdfs_user FOREIGN KEY (user_id)
+        REFERENCES users (id)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE
+);
+```
+
+### 4. Environment Configuration
+
+Copy the environment example file:
+```bash
+cp env.example .env
+```
+
+**For Local Setup (Docker):**
+- No changes required to the `.env` file - it's configured for local Docker services
+
+**For Custom Setup:**
+- Update the database credentials, Elasticsearch, and RabbitMQ connection details in the `.env` file
+
+### 5. Install Dependencies
+```bash
+npm install
+```
+
+### 6. Start the Server
+
+#### Development Mode
 ```bash
 npm run dev
 ```
 
-### Production Mode
+#### Production Mode
 ```bash
 npm start
 ```
 
 The server will start on `http://localhost:3000` (or the port specified in your `.env` file).
 
-## 📊 Database Schema Management
+### 7. Verify Setup
 
-The application uses Sequelize's built-in sync functionality to manage database schema. The system automatically creates and updates tables based on your models.
+- Check if the server is running: `http://localhost:3000/v1`
 
-### 🔄 Schema Sync Mode
-
-- **Alter Sync**: Always enabled - safely modifies existing tables to match models and creates tables if they don't exist
-
-### Environment Configuration
-
-```env
-# All environments - Alter sync is always enabled for safe schema changes
-NODE_ENV=development
-# No additional configuration needed
-```
-
-### Schema Changes
-
-When you modify your models, the database schema will be updated automatically:
-
-1. **Add new models**: Tables are created automatically
-2. **Modify existing models**: Schema changes are applied based on sync mode
-3. **Remove models**: Tables are handled according to sync mode
-
-### Best Practices
-
-1. **All Environments**: Alter sync is automatically enabled for safe schema changes
-2. **Model Changes**: Any changes to your models will be automatically applied to the database
-3. **Data Safety**: Existing data is always preserved during schema updates
-4. **Backup**: Always backup your database before major schema changes
-
-## 🔌 API Endpoints
-
-### Health Check
-- `GET /health` - Server health status
-
-### Users
-- `POST /api/users/register` - Register a new user
-- `POST /api/users/login` - User login
-- `GET /api/users` - Get all users
-- `GET /api/users/:id` - Get user by ID
-- `PUT /api/users/:id` - Update user
-- `DELETE /api/users/:id` - Delete user
-
-### PDFs
-- `POST /api/pdfs` - Create a new PDF entry
-- `GET /api/pdfs` - Get all PDFs
-- `GET /api/pdfs/queued` - Get queued PDFs
-- `GET /api/pdfs/ready` - Get ready PDFs
-- `GET /api/pdfs/failed` - Get failed PDFs
-- `GET /api/pdfs/user/:userId` - Get PDFs by user ID
-- `GET /api/pdfs/:id` - Get PDF by ID
-- `PUT /api/pdfs/:id/status` - Update PDF status
-- `DELETE /api/pdfs/:id` - Delete PDF
-
-## 📝 Example API Usage
-
-### Register a User
-```bash
-curl -X POST http://localhost:3000/api/users/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "john_doe",
-    "password": "password123"
-  }'
-```
-
-### Login
-```bash
-curl -X POST http://localhost:3000/api/users/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "john_doe",
-    "password": "password123"
-  }'
-```
-
-### Create a PDF Entry
-```bash
-curl -X POST http://localhost:3000/api/pdfs \
-  -H "Content-Type: application/json" \
-  -d '{
-    "userId": 1,
-    "pdfPath": "/path/to/document.pdf"
-  }'
-```
-
-### Update PDF Status
-```bash
-curl -X PUT http://localhost:3000/api/pdfs/1/status \
-  -H "Content-Type: application/json" \
-  -d '{
-    "status": "ready"
-  }'
-```
-
-## 🔧 Adding New Features
-
-### 1. Create a Model
-Create a new model in `src/models/` following the existing pattern.
-
-### 2. Create a Repository
-Extend `BaseRepository` in `src/repositories/` for data access.
-
-### 3. Create a Service
-Add business logic in `src/services/`.
-
-### 4. Create a Controller
-Handle HTTP requests in `src/controllers/`.
-
-### 5. Add Routes
-Define API endpoints in `src/routes/`.
-
-### 6. Create Migration (if needed)
-The system will automatically detect and run new migrations.
-
-## 🛡️ Security Features
-
-- **Helmet**: Security headers
-- **CORS**: Cross-origin resource sharing configuration
-- **Input Validation**: Sequelize model validation
-- **Password Hashing**: bcryptjs for password security
-- **Error Handling**: Comprehensive error responses
-
-## 📦 Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DB_HOST` | PostgreSQL host | localhost |
-| `DB_PORT` | PostgreSQL port | 5432 |
-| `DB_NAME` | Database name | flowautomate_db |
-| `DB_USER` | Database user | postgres |
-| `DB_PASSWORD` | Database password | - |
-| `PORT` | Server port | 3000 |
-| `NODE_ENV` | Environment | development |
-| `JWT_SECRET` | JWT secret key | - |
-| `JWT_EXPIRES_IN` | JWT expiration | 24h |
-| `CORS_ORIGIN` | CORS origin | http://localhost:3000 |
-
-## 🐛 Troubleshooting
-
-### Database Connection Issues
-1. Ensure PostgreSQL is running
-2. Check database credentials in `.env`
-3. Verify database exists
-4. Check network connectivity
-
-### Migration Issues
-1. Check migration files for syntax errors
-2. Ensure migrations are in correct order
-3. Verify database permissions
-
-### Port Already in Use
-Change the `PORT` in your `.env` file or kill the process using the port.
 
 ## 📄 License
 

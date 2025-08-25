@@ -37,7 +37,7 @@ function transformPdfDataToElasticsearchDocuments(pdfData, pdfId, userId) {
         // Creating flattened text from table content for text search
         const tableText = item.content.map(row => 
           row.data.join(' | ')
-        ).join('\n');
+        ).join('\n ');
 
         // Creating column-structured table with semantic column names for data analysis
         const columnStructuredTable = transformTableToColumnStructure(item.content, item.title);

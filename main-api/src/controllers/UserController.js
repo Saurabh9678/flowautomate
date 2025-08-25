@@ -29,7 +29,7 @@ class UserController {
     
     const user = await this.userService.validateUser(username, password);
     
-    const token = generateToken(user.id);
+    const token = generateToken(user.id, process.env.JWT_EXPIRES_IN);
     
     successResponse(res, 200, { user, token }, 'User logged in successfully', null);
   }
